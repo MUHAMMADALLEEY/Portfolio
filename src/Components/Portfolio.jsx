@@ -1,5 +1,4 @@
 import React from 'react'
-
 const Portfolio = () => {
   return (
     <>
@@ -58,5 +57,4 @@ const Portfolio = () => {
     </>
   )
 }
-
 export default Portfolio
