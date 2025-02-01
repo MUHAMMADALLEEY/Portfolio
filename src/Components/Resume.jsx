@@ -8,22 +8,17 @@ const Resume = () => {
     const navbar = document.querySelector(".navbar");
     const header = document.querySelector('header');
 
-    // Add null checks for DOM elements
     if (!menuicon || !navbar || !header) {
       console.error('Critical elements not found!');
       return;
     }
 
-    // Handle scroll event to apply sticky effect and active section state
     const handleScroll = () => {
-      // Header sticky effect
       header.classList.toggle('sticky', window.scrollY > 100);
 
-      // Close mobile menu on scroll
       menuicon.classList.remove("bx-x");
       navbar.classList.remove("active");
 
-      // Section active state
       const top = window.scrollY;
       sections.forEach(sec => {
         const offset = sec.offsetTop - 100;
@@ -40,7 +35,6 @@ const Resume = () => {
 
     window.onscroll = handleScroll;
 
-    // Mobile menu toggle
     const toggleMenu = () => {
       menuicon.classList.toggle("bx-x");
       navbar.classList.toggle("active");
@@ -48,7 +42,6 @@ const Resume = () => {
 
     menuicon.onclick = toggleMenu;
 
-    // Cleanup on component unmount
     return () => {
       window.onscroll = null;
       menuicon.onclick = null;
@@ -94,7 +87,6 @@ const Resume = () => {
           </div>
 
           <div className="resume-box">
-            {/* Experience Section */}
             <div className="resume-detail experience active">
               <h2 className="heading">My <span>Experience</span></h2>
               <p className="desc">
@@ -124,7 +116,6 @@ const Resume = () => {
               </div>
             </div>
 
-            {/* Education Section */}
             <div className="resume-detail education">
               <h2 className="heading">My <span>Education</span></h2>
               <p className="desc">
@@ -154,7 +145,6 @@ const Resume = () => {
               </div>
             </div>
 
-            {/* About Me Section */}
             <div className="resume-detail about">
               <h2 className="heading" style={{ marginLeft: '2rem' }}>
                 About <span>Me</span>

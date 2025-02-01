@@ -8,21 +8,17 @@ const Header = () => {
     const navbar = document.querySelector(".navbar");
     const header = document.querySelector('header');
 
-    // Add null checks for DOM elements
     if (!menuicon || !navbar || !header) {
       console.error('Critical elements not found!');
       return;
     }
 
-    // Header sticky effect & scroll event
     const handleScroll = () => {
       header.classList.toggle('sticky', window.scrollY > 100);
 
-      // Close mobile menu on scroll
       menuicon.classList.remove("bx-x");
       navbar.classList.remove("active");
 
-      // Section active state
       const top = window.scrollY;
       sections.forEach(sec => {
         const offset = sec.offsetTop - 100;
@@ -39,7 +35,6 @@ const Header = () => {
 
     window.onscroll = handleScroll;
 
-    // Mobile menu toggle
     const toggleMenu = () => {
       menuicon.classList.toggle("bx-x");
       navbar.classList.toggle("active");
@@ -47,7 +42,6 @@ const Header = () => {
 
     menuicon.onclick = toggleMenu;
 
-    // Cleanup on component unmount
     return () => {
       window.onscroll = null;
       menuicon.onclick = null;

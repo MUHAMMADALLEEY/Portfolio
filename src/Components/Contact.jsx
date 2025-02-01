@@ -131,7 +131,6 @@ const Contact = () => {
           </button>
         </div>
 
-        {/* Show success or error message */}
         {isSubmitted && <p>Your message has been sent successfully!</p>}
         {errorMessage && <p>{errorMessage}</p>}
       </form>
