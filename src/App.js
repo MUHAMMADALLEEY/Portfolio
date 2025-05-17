@@ -12,12 +12,14 @@ import Resume from './Components/Resume';
 import Skills from './Components/Skills';
 
 function App() {
-  // Initialize AOS once the component is mounted
+  
   useEffect(() => {
     AOS.init({
-      duration: 1000, // Customize the duration of animations (optional)
-      once: true, // Make sure the animations happen only once
+      duration: 1000, 
+      once: true
     });
+        document.title = "Muhammad ALi";
+
   }, []);
 
   return (

@@ -23,7 +23,7 @@ const Portfolio = () => {
     {
       title: "Snow Dream",
       description: "Creative site built with React.js and Framer Motion animations.",
-      image: "/images/snow-dream.png",
+      image: "/images/snowdream.png",
       alt: "Snow Dream Project Screenshot"
     },
     {
