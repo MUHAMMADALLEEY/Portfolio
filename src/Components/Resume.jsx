@@ -1,29 +1,92 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const makeRng = (seed0) => {
+  let seed = seed0 >>> 0;
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
 
 const Resume = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const contentRef = useRef(null);
 
+  // performance flags
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  // stable seed for background randomness
+  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
   useEffect(() => {
     setIsVisible(true);
   }, []);
 
-  // UPDATED: stable background orbs (cyan, sky, blue, slate)
-  const orbs = useMemo(
-    () =>
-      [...Array(18)].map((_, i) => ({
-        id: i,
-        size: Math.random() * 360 + 180,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        color: ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"][i % 4],
-        delay: i * 0.55,
-        duration: Math.random() * 18 + 26,
-        blur: Math.random() * 30 + 70
-      })),
-    []
-  );
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduceMotion(mq.matches);
+    apply();
+
+    if (mq.addEventListener) {
+      mq.addEventListener("change", apply);
+      return () => mq.removeEventListener("change", apply);
+    }
+    mq.addListener(apply);
+    return () => mq.removeListener(apply);
+  }, []);
+
+  useEffect(() => {
+    const mqMobile = window.matchMedia("(max-width: 1023px)");
+    const mqCoarse = window.matchMedia("(pointer: coarse)");
+
+    const apply = () => {
+      setIsMobile(mqMobile.matches);
+      setIsCoarsePointer(mqCoarse.matches);
+    };
+
+    apply();
+
+    if (mqMobile.addEventListener) {
+      mqMobile.addEventListener("change", apply);
+      mqCoarse.addEventListener("change", apply);
+      return () => {
+        mqMobile.removeEventListener("change", apply);
+        mqCoarse.removeEventListener("change", apply);
+      };
+    }
+
+    mqMobile.addListener(apply);
+    mqCoarse.addListener(apply);
+    return () => {
+      mqMobile.removeListener(apply);
+      mqCoarse.removeListener(apply);
+    };
+  }, []);
+
+  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+
+  // fewer orbs on mobile/touch/reduced motion
+  const orbCount = enableHeavyMotion ? 18 : 8;
+
+  // seeded orbs (stable, no re-layout jitters)
+  const orbs = useMemo(() => {
+    const rng = makeRng(seedRef.current + 777);
+    const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
+
+    return [...Array(orbCount)].map((_, i) => ({
+      id: i,
+      size: rng() * 360 + 180,
+      left: rng() * 100,
+      top: rng() * 100,
+      color: colors[i % colors.length],
+      delay: i * 0.55,
+      duration: rng() * 18 + 26,
+      blur: rng() * 30 + 70
+    }));
+  }, [orbCount]);
 
   const tabs = useMemo(
     () => [
@@ -97,142 +160,154 @@ const Resume = () => {
     []
   );
 
-  const goToTab = (idx) => {
+  const goToTab = useCallback((idx) => {
     setActiveTab(idx);
-    setTimeout(() => contentRef.current?.focus?.(), 0);
-  };
+    requestAnimationFrame(() => contentRef.current?.focus?.());
+  }, []);
 
-  const TabButton = ({ tab, index }) => {
-    const isActive = activeTab === index;
+  const TabButton = useCallback(
+    ({ tab, index }) => {
+      const isActive = activeTab === index;
 
-    return (
-      <button
-        type="button"
-        onClick={() => goToTab(index)}
-        className={[
-          "relative w-full text-left rounded-2xl transition-all duration-500 transform hover:scale-[1.02] group overflow-hidden",
-          "px-7 py-6",
-          // UPDATED: active = cyan, non-active = blackish with cyan hover
-          isActive
-            ? "bg-cyan-400 text-black shadow-2xl shadow-cyan-400/20"
-            : "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 text-slate-200 hover:border-cyan-400/40"
-        ].join(" ")}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-        <div className="relative flex items-center gap-4">
-          <span className="text-5xl leading-none transform group-hover:scale-110 transition-transform duration-300">
-            {tab.icon}
-          </span>
-          <div className="min-w-0">
-            <div className="text-2xl font-extrabold tracking-tight">{tab.name}</div>
-            <div className={`text-sm mt-1 ${isActive ? "text-black/70" : "text-slate-400"}`}>Tap to view details</div>
-          </div>
-        </div>
-
-        {isActive && (
-          <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-black rounded-full animate-ping" />
-            <span className="w-2.5 h-2.5 bg-black rounded-full" />
-          </div>
-        )}
-      </button>
-    );
-  };
-
-  const TimelineItem = ({ item, index, variant = "purple", rightPill }) => {
-    // UPDATED: timeline line + dot colors for cyan theme
-    const line = "border-cyan-500/20 hover:border-cyan-400/45";
-    const dot = "from-cyan-400 to-sky-500 shadow-cyan-400/20";
-    const hoverBorder = "hover:border-cyan-400/35 hover:shadow-cyan-400/10";
-    const titleHover = "group-hover:text-cyan-200";
-
-    return (
-      <div
-        className={`relative pl-10 pb-10 border-l-2 transition-all duration-500 ${line} animate-slideInLeft`}
-        style={{ animationDelay: `${index * 0.12}s` }}
-      >
-        <div
-          className={`absolute left-0 top-0 w-5 h-5 bg-gradient-to-r ${dot} rounded-full -translate-x-[11px] shadow-lg animate-pulse-slow`}
-        />
-
-        <div
+      return (
+        <button
+          type="button"
+          onClick={() => goToTab(index)}
           className={[
-            "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9",
-            "transition-all duration-500 transform hover:-translate-y-1 group hover:shadow-2xl",
-            hoverBorder
+            "relative w-full text-left rounded-2xl transition-all duration-300 group overflow-hidden",
+            "px-7 py-6",
+            isActive
+              ? "bg-cyan-400 text-black shadow-2xl shadow-cyan-400/20"
+              : "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 text-slate-200 hover:border-cyan-400/40",
+            enableHeavyMotion ? "hover:scale-[1.02]" : ""
           ].join(" ")}
         >
-          <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
+          <div
+            className={[
+              "absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full",
+              enableHeavyMotion ? "group-hover:translate-x-full transition-transform duration-1000" : ""
+            ].join(" ")}
+          />
+
+          <div className="relative flex items-center gap-4">
+            <span
+              className={[
+                "text-5xl leading-none transition-transform duration-300",
+                enableHeavyMotion ? "group-hover:scale-110" : ""
+              ].join(" ")}
+            >
+              {tab.icon}
+            </span>
             <div className="min-w-0">
-              {/* UPDATED: year pill cyan */}
-              <p className="text-cyan-200 text-base font-extrabold mb-3 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full border border-cyan-500/25">
-                <span className="text-lg">🗓️</span>
-                <span>{item.year}</span>
-              </p>
-
-              <h3
-                className={`text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 transition-colors duration-300 ${titleHover}`}
-              >
-                {item.title}
-              </h3>
-
-              <p className="text-slate-200/90 font-semibold text-2xl flex items-center gap-2">
-                <span>🏢</span>
-                <span className="break-words">{item.company}</span>
-              </p>
+              <div className="text-2xl font-extrabold tracking-tight">{tab.name}</div>
+              <div className={`text-sm mt-1 ${isActive ? "text-black/70" : "text-slate-400"}`}>Tap to view details</div>
             </div>
-
-            {rightPill ? (
-              <div className="mt-1">
-                {/* UPDATED: grade pill cyan */}
-                <span className="px-5 py-2 bg-cyan-500/12 text-cyan-200 rounded-full text-base font-extrabold border border-cyan-400/25">
-                  {rightPill}
-                </span>
-              </div>
-            ) : null}
           </div>
 
-          <p className="text-slate-200 leading-relaxed text-xl sm:text-2xl">{item.description}</p>
-
-          {"skills" in item && Array.isArray(item.skills) && (
-            <div className="flex flex-wrap gap-2.5 mt-6">
-              {/* UPDATED: skills chips cyan */}
-              {item.skills.map((s) => (
-                <span
-                  key={s}
-                  className="px-5 py-2.5 bg-cyan-500/10 text-cyan-100 rounded-full text-base sm:text-lg font-bold border border-cyan-400/25 hover:bg-cyan-500/16 transition-colors duration-300"
-                >
-                  {s}
-                </span>
-              ))}
+          {isActive && (
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 bg-black rounded-full ${enableHeavyMotion ? "animate-ping" : ""}`} />
+              <span className="w-2.5 h-2.5 bg-black rounded-full" />
             </div>
           )}
+        </button>
+      );
+    },
+    [activeTab, enableHeavyMotion, goToTab]
+  );
+
+  const TimelineItem = useCallback(
+    ({ item, index, rightPill }) => {
+      return (
+        <div
+          className={[
+            "relative pl-10 pb-10 border-l-2 transition-all duration-300 border-cyan-500/20 hover:border-cyan-400/45",
+            enableHeavyMotion ? "animate-slideInLeft" : ""
+          ].join(" ")}
+          style={enableHeavyMotion ? { animationDelay: `${index * 0.12}s` } : undefined}
+        >
+          <div
+            className={[
+              "absolute left-0 top-0 w-5 h-5 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full -translate-x-[11px] shadow-lg shadow-cyan-400/20",
+              enableHeavyMotion ? "animate-pulse-slow" : ""
+            ].join(" ")}
+          />
+
+          <div
+            className={[
+              "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9",
+              "transition-all duration-300 group",
+              enableHeavyMotion ? "hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10" : "",
+              "hover:border-cyan-400/35"
+            ].join(" ")}
+          >
+            <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
+              <div className="min-w-0">
+                <p className="text-cyan-200 text-base font-extrabold mb-3 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full border border-cyan-500/25">
+                  <span className="text-lg">🗓️</span>
+                  <span>{item.year}</span>
+                </p>
+
+                <h3 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 transition-colors duration-300 group-hover:text-cyan-200">
+                  {item.title}
+                </h3>
+
+                <p className="text-slate-200/90 font-semibold text-2xl flex items-center gap-2">
+                  <span>🏢</span>
+                  <span className="break-words">{item.company}</span>
+                </p>
+              </div>
+
+              {rightPill ? (
+                <div className="mt-1">
+                  <span className="px-5 py-2 bg-cyan-500/12 text-cyan-200 rounded-full text-base font-extrabold border border-cyan-400/25">
+                    {rightPill}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            <p className="text-slate-200 leading-relaxed text-xl sm:text-2xl">{item.description}</p>
+
+            {"skills" in item && Array.isArray(item.skills) && (
+              <div className="flex flex-wrap gap-2.5 mt-6">
+                {item.skills.map((s) => (
+                  <span
+                    key={s}
+                    className="px-5 py-2.5 bg-cyan-500/10 text-cyan-100 rounded-full text-base sm:text-lg font-bold border border-cyan-400/25 hover:bg-cyan-500/16 transition-colors duration-300"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    );
-  };
+      );
+    },
+    [enableHeavyMotion]
+  );
 
   return (
     <section
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="resume"
     >
-      {/* UPDATED: black background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* UPDATED: aurora cyan, sky, blue */}
+      {/* Aurora, disable animation on mobile/touch/reduced motion */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
-        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
-        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
+        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
+        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
+        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
-      {/* Floating orbs */}
+      {/* Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
             key={o.id}
-            className="absolute rounded-full opacity-10 animate-float-smooth"
+            className={`absolute rounded-full opacity-10 ${enableHeavyMotion ? "animate-float-smooth" : ""}`}
             style={{
               width: `${o.size}px`,
               height: `${o.size}px`,
@@ -247,7 +322,6 @@ const Resume = () => {
         ))}
       </div>
 
-      {/* UPDATED: cyan grid */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -257,30 +331,36 @@ const Resume = () => {
         }}
       />
 
-      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
         {/* Heading */}
         <div
-          className={`text-center mb-14 sm:mb-20 transition-all duration-1000 transform ${
+          className={[
+            "text-center mb-14 sm:mb-20 transition-all duration-1000 transform",
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
-          }`}
+          ].join(" ")}
         >
           <div className="inline-block relative">
-            {/* UPDATED: title white, gradient cyan */}
             <h2 className="text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-4 tracking-tight text-white">
               Resume{" "}
               <span
-                className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-gradient"
+                className={[
+                  "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
+                  enableHeavyMotion ? "animate-gradient" : ""
+                ].join(" ")}
                 style={{ backgroundSize: "200% auto" }}
               >
                 Overview
               </span>
             </h2>
 
-            {/* UPDATED: underline cyan */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full animate-pulse-slow" />
+            <div
+              className={[
+                "absolute -bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full",
+                enableHeavyMotion ? "animate-pulse-slow" : ""
+              ].join(" ")}
+            />
           </div>
 
           <p className="text-slate-200/90 text-lg sm:text-2xl mt-6 sm:mt-8 max-w-3xl mx-auto leading-relaxed">
@@ -291,9 +371,10 @@ const Resume = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar */}
           <div
-            className={`lg:col-span-4 space-y-4 transition-all duration-1000 delay-200 transform ${
+            className={[
+              "lg:col-span-4 space-y-4 transition-all duration-1000 delay-200 transform",
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
-            }`}
+            ].join(" ")}
           >
             <div className="space-y-4">{tabs.map((t, idx) => <TabButton key={t.name} tab={t} index={idx} />)}</div>
 
@@ -317,18 +398,22 @@ const Resume = () => {
               </div>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                {/* UPDATED: contact button cyan */}
                 <a
                   href="#contact"
-                  className="text-center px-4 py-3 rounded-xl bg-cyan-400 text-black font-extrabold text-lg hover:scale-[1.02] transition-transform duration-300"
+                  className={`text-center px-4 py-3 rounded-xl bg-cyan-400 text-black font-extrabold text-lg ${
+                    enableHeavyMotion ? "hover:scale-[1.02] transition-transform duration-300" : ""
+                  }`}
                 >
                   Contact
                 </a>
 
-                {/* UPDATED: portfolio button cyan hover */}
                 <a
                   href="#portfolio"
-                  className="text-center px-4 py-3 rounded-xl bg-slate-900/40 border border-slate-700/60 text-slate-100 font-extrabold text-lg hover:border-cyan-400/40 hover:scale-[1.02] transition-all duration-300"
+                  className={[
+                    "text-center px-4 py-3 rounded-xl bg-slate-900/40 border border-slate-700/60 text-slate-100 font-extrabold text-lg",
+                    enableHeavyMotion ? "hover:border-cyan-400/40 hover:scale-[1.02]" : "hover:border-cyan-400/40",
+                    "transition-all duration-300"
+                  ].join(" ")}
                 >
                   Portfolio
                 </a>
@@ -338,16 +423,15 @@ const Resume = () => {
 
           {/* Content */}
           <div
-            className={`lg:col-span-8 transition-all duration-1000 delay-400 transform ${
+            className={[
+              "lg:col-span-8 transition-all duration-1000 delay-400 transform",
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
-            }`}
+            ].join(" ")}
           >
             <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 min-h-[640px] shadow-2xl shadow-black/30">
               <div ref={contentRef} tabIndex={-1} className="outline-none">
-                {/* Content header */}
                 <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
                   <div className="flex items-center gap-4">
-                    {/* UPDATED: icon tile cyan */}
                     <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-br from-cyan-400 to-sky-500 shadow-cyan-400/20">
                       <span className="text-4xl">{tabs[activeTab].icon}</span>
                     </div>
@@ -384,14 +468,12 @@ const Resume = () => {
                   </div>
                 </div>
 
-                {/* Intro */}
-                <div className="text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 animate-fadeInUp">
+                <div className={`text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
                   {activeTab === 0
                     ? "I build modern web apps with strong UI, clean APIs, and reliable delivery. Here are my most recent roles."
                     : "A strong academic base plus practical learning, focused on programming and modern web development."}
                 </div>
 
-                {/* Tab Content */}
                 {activeTab === 0 && (
                   <div className="space-y-1">
                     {experienceData.map((item, idx) => (
@@ -518,6 +600,17 @@ const Resume = () => {
         }
         .delay-700 {
           animation-delay: 700ms;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float-smooth,
+          .animate-aurora-slow,
+          .animate-fadeInUp,
+          .animate-slideInLeft,
+          .animate-gradient,
+          .animate-pulse-slow {
+            animation: none !important;
+          }
         }
       `}</style>
     </section>

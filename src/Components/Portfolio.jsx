@@ -1,19 +1,69 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const makeRng = (seed0) => {
+  let seed = seed0 >>> 0;
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
 
 const Portfolio = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-
   // pagination
   const PER_PAGE = 6;
   const [page, setPage] = useState(1);
 
-  // scroll reveal animation
+  // reveal once when section enters viewport
   const [inView, setInView] = useState(false);
   const sectionRef = useRef(null);
 
+  // reduce motion + coarse pointer (touch)
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  // stable seed for random backgrounds
+  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
   useEffect(() => {
-    setIsVisible(true);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const apply = () => setReduceMotion(mq.matches);
+    apply();
+
+    if (mq.addEventListener) {
+      mq.addEventListener("change", apply);
+      return () => mq.removeEventListener("change", apply);
+    }
+    mq.addListener(apply);
+    return () => mq.removeListener(apply);
+  }, []);
+
+  useEffect(() => {
+    const mqMobile = window.matchMedia("(max-width: 1023px)");
+    const mqCoarse = window.matchMedia("(pointer: coarse)");
+
+    const apply = () => {
+      setIsMobile(mqMobile.matches);
+      setIsCoarsePointer(mqCoarse.matches);
+    };
+
+    apply();
+
+    if (mqMobile.addEventListener) {
+      mqMobile.addEventListener("change", apply);
+      mqCoarse.addEventListener("change", apply);
+      return () => {
+        mqMobile.removeEventListener("change", apply);
+        mqCoarse.removeEventListener("change", apply);
+      };
+    }
+
+    mqMobile.addListener(apply);
+    mqCoarse.addListener(apply);
+    return () => {
+      mqMobile.removeListener(apply);
+      mqCoarse.removeListener(apply);
+    };
   }, []);
 
   useEffect(() => {
@@ -22,101 +72,112 @@ const Portfolio = () => {
 
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setInView(true);
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.unobserve(el); // stop observing after first reveal
+        }
       },
-      { threshold: 0.15 }
+      { threshold: 0.12 }
     );
 
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
-  // UPDATED: stable orbs (cyan, sky, blue, slate)
-  const orbs = useMemo(
-    () =>
-      [...Array(12)].map((_, i) => ({
-        id: i,
-        size: Math.random() * 380 + 180,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        color: ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"][i % 4],
-        delay: i * 0.65,
-        duration: Math.random() * 18 + 26,
-        blur: Math.random() * 30 + 70
-      })),
+  const projects = useMemo(
+    () => [
+      {
+        title: "Agency",
+        description: "Full-stack application built with React.js, Express, and MongoDB.",
+        image: "/images/agency.PNG",
+        alt: "Agency Project Screenshot",
+        tech: ["React", "Express", "MongoDB"],
+        href: "#"
+      },
+      {
+        title: "Portfolio",
+        description: "Responsive personal portfolio using React and modern libraries.",
+        image: "/images/Portfolio.PNG",
+        alt: "Portfolio Website Screenshot",
+        tech: ["React", "Tailwind", "Framer Motion"],
+        href: "#"
+      },
+      {
+        title: "E-commerce Store",
+        description: "Online store built with React and Firebase for authentication and data handling.",
+        image: "/images/ecommerce.PNG",
+        alt: "E-commerce Store Screenshot",
+        tech: ["React", "Firebase", "Stripe"],
+        href: "#"
+      },
+      {
+        title: "E-commerce Store",
+        description: "Online store built with React and Firebase for authentication and data handling.",
+        image: "/images/ecommerce.PNG",
+        alt: "E-commerce Store Screenshot",
+        tech: ["React", "Firebase", "Stripe"],
+        href: "#"
+      },
+      {
+        title: "Snow Dream",
+        description: "Creative site built with React.js and Framer Motion animations.",
+        image: "/images/snowdream.PNG",
+        alt: "Snow Dream Project Screenshot",
+        tech: ["React", "Framer Motion", "CSS"],
+        href: "#"
+      },
+      {
+        title: "Notes App",
+        description: "Notes-taking app built with Express.js and MongoDB.",
+        image: "/images/notes.png",
+        alt: "Notes App Screenshot",
+        tech: ["Express", "MongoDB", "Node.js"],
+        href: "#"
+      },
+      {
+        title: "Post App",
+        description: "Blog-style post application using Express, MongoDB, and EJS templating.",
+        image: "/images/auth.jpg",
+        alt: "Post App Screenshot",
+        tech: ["Express", "MongoDB", "EJS"],
+        href: "#"
+      }
+    ],
     []
   );
 
-  const projects = [
-    {
-      title: "Agency",
-      description: "Full-stack application built with React.js, Express, and MongoDB.",
-      image: "/images/agency.PNG",
-      alt: "Agency Project Screenshot",
-      tech: ["React", "Express", "MongoDB"],
-      href: "#"
-    },
-    {
-      title: "Portfolio",
-      description: "Responsive personal portfolio using React and modern libraries.",
-      image: "/images/Portfolio.PNG",
-      alt: "Portfolio Website Screenshot",
-      tech: ["React", "Tailwind", "Framer Motion"],
-      href: "#"
-    },
-    {
-      title: "E-commerce Store",
-      description: "Online store built with React and Firebase for authentication and data handling.",
-      image: "/images/ecommerce.PNG",
-      alt: "E-commerce Store Screenshot",
-      tech: ["React", "Firebase", "Stripe"],
-      href: "#"
-    },
-    {
-      title: "E-commerce Store",
-      description: "Online store built with React and Firebase for authentication and data handling.",
-      image: "/images/ecommerce.PNG",
-      alt: "E-commerce Store Screenshot",
-      tech: ["React", "Firebase", "Stripe"],
-      href: "#"
-    },
-    {
-      title: "Snow Dream",
-      description: "Creative site built with React.js and Framer Motion animations.",
-      image: "/images/snowdream.PNG",
-      alt: "Snow Dream Project Screenshot",
-      tech: ["React", "Framer Motion", "CSS"],
-      href: "#"
-    },
-    {
-      title: "Notes App",
-      description: "Notes-taking app built with Express.js and MongoDB.",
-      image: "/images/notes.png",
-      alt: "Notes App Screenshot",
-      tech: ["Express", "MongoDB", "Node.js"],
-      href: "#"
-    },
-    {
-      title: "Post App",
-      description: "Blog-style post application using Express, MongoDB, and EJS templating.",
-      image: "/images/auth.jpg",
-      alt: "Post App Screenshot",
-      tech: ["Express", "MongoDB", "EJS"],
-      href: "#"
-    }
-  ];
-
-  const totalPages = Math.max(1, Math.ceil(projects.length / PER_PAGE));
-  const start = (page - 1) * PER_PAGE;
-  const currentProjects = projects.slice(start, start + PER_PAGE);
-
-  const goTo = (p) => {
-    const safe = Math.min(totalPages, Math.max(1, p));
-    setPage(safe);
-    setHoveredIndex(null);
-  };
-
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(projects.length / PER_PAGE)), [projects.length]);
+  const start = useMemo(() => (page - 1) * PER_PAGE, [page]);
+  const currentProjects = useMemo(() => projects.slice(start, start + PER_PAGE), [projects, start]);
   const showPagination = projects.length > PER_PAGE;
+
+  const goTo = useCallback(
+    (p) => {
+      const safe = Math.min(totalPages, Math.max(1, p));
+      setPage(safe);
+    },
+    [totalPages]
+  );
+
+  // reduce background work on mobile/touch and on reduced motion
+  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+  const orbCount = enableHeavyMotion ? 12 : 6;
+
+  // Stable, seeded orbs, less count on mobile/touch
+  const orbs = useMemo(() => {
+    const rng = makeRng(seedRef.current + 999);
+    const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
+    return [...Array(orbCount)].map((_, i) => ({
+      id: i,
+      size: rng() * 380 + 180,
+      left: rng() * 100,
+      top: rng() * 100,
+      color: colors[i % colors.length],
+      delay: i * 0.65,
+      duration: rng() * 18 + 26,
+      blur: rng() * 30 + 70
+    }));
+  }, [orbCount]);
 
   return (
     <section
@@ -124,22 +185,21 @@ const Portfolio = () => {
       className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="portfolio"
     >
-      {/* UPDATED: black background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* UPDATED: aurora layers cyan, sky, blue */}
+      {/* Aurora, disable animation on mobile/touch and reduced motion */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
-        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
-        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
+        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
+        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
+        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
-      {/* Floating orbs */}
+      {/* Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
             key={o.id}
-            className="absolute rounded-full opacity-10 animate-float-smooth"
+            className={`absolute rounded-full opacity-10 ${enableHeavyMotion ? "animate-float-smooth" : ""}`}
             style={{
               width: `${o.size}px`,
               height: `${o.size}px`,
@@ -154,7 +214,6 @@ const Portfolio = () => {
         ))}
       </div>
 
-      {/* UPDATED: cyan grid overlay */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -164,86 +223,71 @@ const Portfolio = () => {
         }}
       />
 
-      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
-      {/* Main Content */}
       <div className="relative z-10 w-full max-w-[1300px]">
         {/* Heading */}
         <div
-          className={`text-center mb-12 sm:mb-16 transition-all duration-1000 transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
-          }`}
+          className={[
+            "text-center mb-12 sm:mb-16 transition-all duration-1000 transform",
+            inView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
+          ].join(" ")}
         >
-          {/* UPDATED: heading base white, gradient cyan */}
           <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold inline-block tracking-tight text-white">
             My{" "}
             <span
-              className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-gradient"
+              className={[
+                "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
+                enableHeavyMotion ? "animate-gradient" : ""
+              ].join(" ")}
               style={{ backgroundSize: "200% auto" }}
             >
               Portfolio
             </span>
           </h2>
 
-          {/* UPDATED: underline cyan */}
-          <div className="h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full animate-pulse-slow" />
+          <div className={`h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
 
           <p className="text-slate-200/90 text-lg sm:text-xl mt-6 max-w-3xl mx-auto leading-relaxed">
             A selection of projects showing clean UI, smooth interactions, and reliable full stack features.
           </p>
         </div>
 
-        {/* Portfolio Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
           {currentProjects.map((project, localIndex) => {
             const globalIndex = start + localIndex;
 
             return (
               <article
-                key={globalIndex}
-                onMouseEnter={() => setHoveredIndex(globalIndex)}
-                onMouseLeave={() => setHoveredIndex(null)}
+                key={`${project.title}-${globalIndex}`}
                 className={[
-                  // UPDATED: hover border cyan
                   "group relative bg-slate-900/45 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-700/50 hover:border-cyan-400/40 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-400/10 transform hover:-translate-y-2",
-                  "opacity-0 translate-y-6",
-                  inView ? "animate-revealUp" : ""
+                  inView ? "animate-revealUp" : "opacity-0 translate-y-6"
                 ].join(" ")}
-                style={{
-                  animationDelay: `${localIndex * 0.12}s`,
-                  animationFillMode: "forwards"
-                }}
+                style={inView ? { animationDelay: `${localIndex * 0.12}s` } : undefined}
               >
-                {/* UPDATED: top glow cyan */}
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/7 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-                {/* Media */}
                 <div className="relative h-64 overflow-hidden">
                   <img
                     src={project.image}
                     alt={project.alt}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       e.currentTarget.src =
-                        "https://via.placeholder.com/600x420/0ea5e9/000000?text=" + project.title;
+                        "https://via.placeholder.com/600x420/0ea5e9/000000?text=" + encodeURIComponent(project.title);
                     }}
                   />
 
-                  {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-
-                  {/* Shine */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-                  {/* Tech chips */}
-                  <div
-                    className={`absolute left-5 right-5 top-5 flex flex-wrap gap-2 transition-all duration-500 ${
-                      hoveredIndex === globalIndex ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3"
-                    }`}
-                  >
+                  {/* Tech chips, CSS only, no React hover state */}
+                  <div className="absolute left-5 right-5 top-5 flex flex-wrap gap-2 opacity-0 -translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
                     {project.tech.map((t) => (
                       <span
                         key={t}
@@ -254,12 +298,7 @@ const Portfolio = () => {
                     ))}
                   </div>
 
-                  {/* UPDATED: hover button cyan with black text */}
-                  <div
-                    className={`absolute bottom-5 left-5 right-5 transition-all duration-500 ${
-                      hoveredIndex === globalIndex ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-                    }`}
-                  >
+                  <div className="absolute bottom-5 left-5 right-5 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
                     <a
                       href={project.href}
                       className="inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-cyan-400 text-black font-extrabold hover:shadow-2xl hover:shadow-cyan-400/25 transition-all duration-300"
@@ -277,10 +316,8 @@ const Portfolio = () => {
                   </div>
                 </div>
 
-                {/* Body */}
                 <div className="relative p-7">
                   <div className="flex items-start justify-between gap-4">
-                    {/* UPDATED: title gradient cyan only */}
                     <h3 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500">
                       {project.title}
                     </h3>
@@ -292,14 +329,12 @@ const Portfolio = () => {
 
                   <p className="text-slate-200/90 text-base leading-relaxed mt-3">{project.description}</p>
 
-                  {/* Footer row */}
                   <div className="mt-6 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-slate-300 text-sm font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-cyan-400/80 animate-pulse-slow" />
+                      <span className={`w-2 h-2 rounded-full bg-cyan-400/80 ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
                       <span>UI, API, Deployment</span>
                     </div>
 
-                    {/* UPDATED: link cyan, removed purple */}
                     <a
                       href={project.href}
                       className="group/btn inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 font-extrabold transition-all duration-300"
@@ -322,7 +357,6 @@ const Portfolio = () => {
                   </div>
                 </div>
 
-                {/* UPDATED: corner decoration cyan */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-cyan-500/14 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </article>
             );
@@ -389,7 +423,7 @@ const Portfolio = () => {
         )}
 
         {/* Bottom CTA */}
-        <div className="text-center animate-fadeInUp opacity-0" style={{ animationDelay: "0.8s", animationFillMode: "forwards" }}>
+        <div className={inView ? "text-center animate-fadeInUp" : "text-center opacity-0 translate-y-6"}>
           <div className="inline-flex flex-col sm:flex-row items-center gap-3 px-8 py-5 bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl hover:border-cyan-400/40 transition-all duration-300 group">
             <span className="text-lg text-slate-200/90 font-semibold">Want to see more work?</span>
 
@@ -511,7 +545,7 @@ const Portfolio = () => {
         }
 
         .animate-fadeInUp {
-          animation: fadeInUp 0.85s ease-out;
+          animation: fadeInUp 0.85s ease-out forwards;
         }
 
         .animate-gradient {
@@ -531,6 +565,17 @@ const Portfolio = () => {
         }
         .delay-700 {
           animation-delay: 700ms;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float-smooth,
+          .animate-aurora-slow,
+          .animate-fadeInUp,
+          .animate-gradient,
+          .animate-pulse-slow,
+          .animate-revealUp {
+            animation: none !important;
+          }
         }
       `}</style>
     </section>

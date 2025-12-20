@@ -1,5 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import emailjs from "emailjs-com";
+
+const makeRng = (seed0) => {
+  let seed = seed0 >>> 0;
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -15,178 +23,260 @@ const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
-  const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [smoothMouse, setSmoothMouse] = useState({ x: 0, y: 0 });
   const [magnet, setMagnet] = useState({ x: 0, y: 0 });
 
-  // UPDATED: stable orbs, cyan theme
-  const orbs = useMemo(
-    () =>
-      [...Array(16)].map((_, i) => ({
-        id: i,
-        size: Math.random() * 420 + 180,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        color: ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"][i % 4],
-        delay: i * 0.55,
-        duration: Math.random() * 18 + 26,
-        blur: Math.random() * 35 + 75,
-        opacity: Math.random() * 0.08 + 0.06
-      })),
-    []
-  );
+  // perf flags
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
-  const sparkles = useMemo(
-    () =>
-      [...Array(60)].map((_, i) => ({
-        id: i,
-        size: Math.random() * 2.8 + 1.2,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        opacity: Math.random() * 0.32 + 0.1,
-        delay: Math.random() * 5,
-        duration: Math.random() * 12 + 10
-      })),
-    []
-  );
+  // stable seed for all decorative randomness
+  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
-  const shootingStars = useMemo(
-    () =>
-      [...Array(7)].map((_, i) => ({
-        id: i,
-        top: Math.random() * 65,
-        delay: Math.random() * 6 + i * 1.15,
-        duration: Math.random() * 1.6 + 1.4,
-        length: Math.random() * 220 + 180,
-        opacity: Math.random() * 0.28 + 0.2
-      })),
-    []
-  );
-
-  const floatEmojis = useMemo(() => {
-    const list = ["📩", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "💡", "🤝", "📅"];
-    return [...Array(20)].map((_, i) => ({
-      id: i,
-      emoji: list[i % list.length],
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      size: Math.random() * 18 + 14,
-      rotate: Math.random() * 70 - 35,
-      delay: Math.random() * 5,
-      duration: Math.random() * 18 + 18,
-      opacity: Math.random() * 0.16 + 0.06
-    }));
-  }, []);
-
-  const confetti = useMemo(() => {
-    const colors = ["#a855f7", "#ec4899", "#22d3ee", "#60a5fa", "#34d399"];
-    return [...Array(28)].map((_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      size: Math.random() * 8 + 6,
-      delay: Math.random() * 0.25,
-      duration: Math.random() * 1.1 + 1.1,
-      color: colors[i % colors.length]
-    }));
-  }, []);
+  // avoid re-rendering on every mousemove
+  const targetMouseRef = useRef({ x: 0, y: 0 });
+  const rafRef = useRef(0);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     setIsVisible(true);
+    mountedRef.current = true;
 
-    const onMove = (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 14;
-      const y = (e.clientY / window.innerHeight - 0.5) * 14;
-      setMouse({ x, y });
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mqMobile = window.matchMedia("(max-width: 1023px)");
+    const mqCoarse = window.matchMedia("(pointer: coarse)");
+
+    const apply = () => {
+      setReduceMotion(mq.matches);
+      setIsMobile(mqMobile.matches);
+      setIsCoarsePointer(mqCoarse.matches);
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
+    apply();
+
+    if (mq.addEventListener) {
+      mq.addEventListener("change", apply);
+      mqMobile.addEventListener("change", apply);
+      mqCoarse.addEventListener("change", apply);
+    } else {
+      mq.addListener(apply);
+      mqMobile.addListener(apply);
+      mqCoarse.addListener(apply);
+    }
 
     if (process.env.REACT_APP_EMAILJS_USER_ID) {
       emailjs.init(process.env.REACT_APP_EMAILJS_USER_ID);
     }
 
-    return () => window.removeEventListener("mousemove", onMove);
+    return () => {
+      mountedRef.current = false;
+
+      if (mq.removeEventListener) {
+        mq.removeEventListener("change", apply);
+        mqMobile.removeEventListener("change", apply);
+        mqCoarse.removeEventListener("change", apply);
+      } else {
+        mq.removeListener(apply);
+        mqMobile.removeListener(apply);
+        mqCoarse.removeListener(apply);
+      }
+    };
   }, []);
 
-  useEffect(() => {
-    let raf = 0;
-    const loop = () => {
-      setSmoothMouse((prev) => {
-        const dx = mouse.x - prev.x;
-        const dy = mouse.y - prev.y;
-        return { x: prev.x + dx * 0.07, y: prev.y + dy * 0.07 };
-      });
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [mouse]);
+  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
 
-  const handleChange = (e) => {
+  // mouse parallax (optimized), only runs when heavy motion is allowed
+  useEffect(() => {
+    if (!enableHeavyMotion) {
+      setSmoothMouse({ x: 0, y: 0 });
+      return;
+    }
+
+    const onMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 14;
+      const y = (e.clientY / window.innerHeight - 0.5) * 14;
+      targetMouseRef.current = { x, y };
+    };
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+
+    const tick = () => {
+      if (!mountedRef.current) return;
+
+      setSmoothMouse((prev) => {
+        const t = targetMouseRef.current;
+        const dx = t.x - prev.x;
+        const dy = t.y - prev.y;
+        const nx = prev.x + dx * 0.07;
+        const ny = prev.y + dy * 0.07;
+
+        if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return prev;
+        return { x: nx, y: ny };
+      });
+
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.cancelAnimationFrame(rafRef.current);
+    };
+  }, [enableHeavyMotion]);
+
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
-  };
+  }, []);
 
-  const validate = () => {
+  const validate = useCallback(() => {
     if (!formData.name.trim()) return "Please enter your name.";
     if (!formData.email.trim()) return "Please enter your email.";
     if (!/^\S+@\S+\.\S+$/.test(formData.email.trim())) return "Please enter a valid email.";
     if (!formData.subject.trim()) return "Please enter a subject.";
     if (!formData.message.trim()) return "Please write your message.";
     return "";
-  };
+  }, [formData.email, formData.message, formData.name, formData.subject]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
 
-    const err = validate();
-    if (err) {
-      setErrorMessage(err);
-      setTimeout(() => setErrorMessage(""), 4500);
-      return;
-    }
+      const err = validate();
+      if (err) {
+        setErrorMessage(err);
+        window.setTimeout(() => setErrorMessage(""), 4500);
+        return;
+      }
 
-    setIsLoading(true);
-    setErrorMessage("");
+      setIsLoading(true);
+      setErrorMessage("");
 
-    const templateParams = {
-      name: formData.name,
-      email: formData.email,
-      mobile: formData.mobile,
-      subject: formData.subject,
-      message: formData.message
-    };
+      const templateParams = {
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+        subject: formData.subject,
+        message: formData.message
+      };
 
-    emailjs
-      .send(
-        process.env.REACT_APP_EMAILJS_SERVICE_ID,
-        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
-        templateParams,
-        process.env.REACT_APP_EMAILJS_USER_ID
-      )
-      .then(
-        () => {
-          setIsSubmitted(true);
-          setIsLoading(false);
-          setFormData({ name: "", email: "", mobile: "", subject: "", message: "" });
-          setTimeout(() => setIsSubmitted(false), 4500);
-        },
-        () => {
-          setErrorMessage("Failed to send the message. Please try again later.");
-          setIsLoading(false);
-          setTimeout(() => setErrorMessage(""), 5000);
-        }
-      );
-  };
+      emailjs
+        .send(
+          process.env.REACT_APP_EMAILJS_SERVICE_ID,
+          process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+          templateParams,
+          process.env.REACT_APP_EMAILJS_USER_ID
+        )
+        .then(
+          () => {
+            setIsSubmitted(true);
+            setIsLoading(false);
+            setFormData({ name: "", email: "", mobile: "", subject: "", message: "" });
+            window.setTimeout(() => setIsSubmitted(false), 4500);
+          },
+          () => {
+            setErrorMessage("Failed to send the message. Please try again later.");
+            setIsLoading(false);
+            window.setTimeout(() => setErrorMessage(""), 5000);
+          }
+        );
+    },
+    [formData.email, formData.message, formData.mobile, formData.name, formData.subject, validate]
+  );
 
-  const handleMagnetMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - (rect.left + rect.width / 2)) * 0.18;
-    const y = (e.clientY - (rect.top + rect.height / 2)) * 0.18;
-    setMagnet({ x, y });
-  };
+  // magnet effect only when heavy motion, keeps same UI but saves work on touch/mobile
+  const handleMagnetMove = useCallback(
+    (e) => {
+      if (!enableHeavyMotion) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - (rect.left + rect.width / 2)) * 0.18;
+      const y = (e.clientY - (rect.top + rect.height / 2)) * 0.18;
+      setMagnet({ x, y });
+    },
+    [enableHeavyMotion]
+  );
 
-  const resetMagnet = () => setMagnet({ x: 0, y: 0 });
+  const resetMagnet = useCallback(() => setMagnet({ x: 0, y: 0 }), []);
+
+  // fewer decorative elements on mobile/touch/reduced motion
+  const orbCount = enableHeavyMotion ? 16 : 8;
+  const sparkleCount = enableHeavyMotion ? 60 : 18;
+  const starCount = enableHeavyMotion ? 7 : 2;
+  const emojiCount = enableHeavyMotion ? 20 : 8;
+  const confettiCount = enableHeavyMotion ? 28 : 14;
+
+  const orbs = useMemo(() => {
+    const rng = makeRng(seedRef.current + 101);
+    const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
+    return [...Array(orbCount)].map((_, i) => ({
+      id: i,
+      size: rng() * 420 + 180,
+      left: rng() * 100,
+      top: rng() * 100,
+      color: colors[i % 4],
+      delay: i * 0.55,
+      duration: rng() * 18 + 26,
+      blur: rng() * 35 + 75,
+      opacity: rng() * 0.08 + 0.06
+    }));
+  }, [orbCount]);
+
+  const sparkles = useMemo(() => {
+    const rng = makeRng(seedRef.current + 202);
+    return [...Array(sparkleCount)].map((_, i) => ({
+      id: i,
+      size: rng() * 2.8 + 1.2,
+      left: rng() * 100,
+      top: rng() * 100,
+      opacity: rng() * 0.32 + 0.1,
+      delay: rng() * 5,
+      duration: rng() * 12 + 10
+    }));
+  }, [sparkleCount]);
+
+  const shootingStars = useMemo(() => {
+    const rng = makeRng(seedRef.current + 303);
+    return [...Array(starCount)].map((_, i) => ({
+      id: i,
+      top: rng() * 65,
+      delay: rng() * 6 + i * 1.15,
+      duration: rng() * 1.6 + 1.4,
+      length: rng() * 220 + 180,
+      opacity: rng() * 0.28 + 0.2
+    }));
+  }, [starCount]);
+
+  const floatEmojis = useMemo(() => {
+    const rng = makeRng(seedRef.current + 404);
+    const list = ["📩", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "💡", "🤝", "📅"];
+    return [...Array(emojiCount)].map((_, i) => ({
+      id: i,
+      emoji: list[i % list.length],
+      left: rng() * 100,
+      top: rng() * 100,
+      size: rng() * 18 + 14,
+      rotate: rng() * 70 - 35,
+      delay: rng() * 5,
+      duration: rng() * 18 + 18,
+      opacity: rng() * 0.16 + 0.06
+    }));
+  }, [emojiCount]);
+
+  const confetti = useMemo(() => {
+    const rng = makeRng(seedRef.current + 505);
+    const colors = ["#a855f7", "#ec4899", "#22d3ee", "#60a5fa", "#34d399"];
+    return [...Array(confettiCount)].map((_, i) => ({
+      id: i,
+      left: rng() * 100,
+      size: rng() * 8 + 6,
+      delay: rng() * 0.25,
+      duration: rng() * 1.1 + 1.1,
+      color: colors[i % colors.length],
+      rotate: rng() * 180
+    }));
+  }, [confettiCount]);
 
   const contactInfo = useMemo(
     () => [
@@ -246,38 +336,46 @@ const Contact = () => {
     []
   );
 
+  const parallaxStyle = enableHeavyMotion
+    ? {
+        transform: `translate3d(${smoothMouse.x}px, ${smoothMouse.y}px, 0)`,
+        transition: "transform 0.12s ease-out"
+      }
+    : undefined;
+
+  const parallaxStyle2 = enableHeavyMotion
+    ? {
+        transform: `translate3d(${smoothMouse.x * 1.2}px, ${smoothMouse.y * 1.2}px, 0)`,
+        transition: "transform 0.12s ease-out"
+      }
+    : undefined;
+
+  const gridParallaxStyle = enableHeavyMotion
+    ? {
+        transform: `translate3d(${smoothMouse.x * 0.6}px, ${smoothMouse.y * 0.6}px, 0)`,
+        transition: "transform 0.12s ease-out"
+      }
+    : undefined;
+
   return (
     <section
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="contact"
     >
-      {/* UPDATED: black background like the others */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
       {/* Animated blob mesh */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.58]"
-        style={{
-          transform: `translate3d(${smoothMouse.x * 1.0}px, ${smoothMouse.y * 1.0}px, 0)`,
-          transition: "transform 0.12s ease-out"
-        }}
-      >
-        <div className="absolute -top-52 -left-52 w-[940px] h-[940px] rounded-full bg-purple-500/10 blur-3xl animate-blobA" />
-        <div className="absolute top-10 -right-56 w-[980px] h-[980px] rounded-full bg-pink-500/10 blur-3xl animate-blobB" />
-        <div className="absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-cyan-500/10 blur-3xl animate-blobC" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.58]" style={parallaxStyle}>
+        <div className={`absolute -top-52 -left-52 w-[940px] h-[940px] rounded-full bg-purple-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobA" : ""}`} />
+        <div className={`absolute top-10 -right-56 w-[980px] h-[980px] rounded-full bg-pink-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobB" : ""}`} />
+        <div className={`absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobC" : ""}`} />
       </div>
 
       {/* Soft aurora */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          transform: `translate3d(${smoothMouse.x * 1.2}px, ${smoothMouse.y * 1.2}px, 0)`,
-          transition: "transform 0.12s ease-out"
-        }}
-      >
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
-        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
-        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
+      <div className="absolute inset-0 pointer-events-none" style={parallaxStyle2}>
+        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
+        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
+        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
       {/* Floating orbs */}
@@ -285,7 +383,7 @@ const Contact = () => {
         {orbs.map((o) => (
           <div
             key={o.id}
-            className="absolute rounded-full animate-float-smooth"
+            className={`absolute rounded-full ${enableHeavyMotion ? "animate-float-smooth" : ""}`}
             style={{
               width: `${o.size}px`,
               height: `${o.size}px`,
@@ -306,7 +404,7 @@ const Contact = () => {
         {sparkles.map((s) => (
           <div
             key={s.id}
-            className="absolute rounded-full bg-white/70 animate-sparkle-drift"
+            className={`absolute rounded-full bg-white/70 ${enableHeavyMotion ? "animate-sparkle-drift" : ""}`}
             style={{
               width: `${s.size}px`,
               height: `${s.size}px`,
@@ -326,7 +424,7 @@ const Contact = () => {
         {shootingStars.map((st) => (
           <div
             key={st.id}
-            className="absolute animate-shoot"
+            className={`absolute ${enableHeavyMotion ? "animate-shoot" : ""}`}
             style={{
               top: `${st.top}%`,
               left: "-30%",
@@ -348,7 +446,7 @@ const Contact = () => {
         {floatEmojis.map((e) => (
           <div
             key={e.id}
-            className="absolute animate-emojiFloat select-none"
+            className={`absolute select-none ${enableHeavyMotion ? "animate-emojiFloat" : ""}`}
             style={{
               left: `${e.left}%`,
               top: `${e.top}%`,
@@ -365,20 +463,19 @@ const Contact = () => {
         ))}
       </div>
 
-      {/* UPDATED: cyan grid, parallax */}
+      {/* Cyan grid */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
-          transform: `translate3d(${smoothMouse.x * 0.6}px, ${smoothMouse.y * 0.6}px, 0)`,
-          transition: "transform 0.12s ease-out"
+          ...gridParallaxStyle
         }}
       />
 
       {/* Scanline shimmer */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
+      <div className={`absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay ${enableHeavyMotion ? "animate-scan" : ""}`}>
         <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
       </div>
 
@@ -395,16 +492,16 @@ const Contact = () => {
           <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight inline-block text-white">
             Contact{" "}
             <span
-              className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-gradient"
+              className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 ${enableHeavyMotion ? "animate-gradient" : ""}`}
               style={{ backgroundSize: "220% 220%" }}
             >
               Me
             </span>{" "}
-            <span className="inline-block animate-bounceSoft">📩</span>
+            <span className={`inline-block ${enableHeavyMotion ? "animate-bounceSoft" : ""}`}>📩</span>
           </h2>
 
-          <div className="h-1 w-44 bg-gradient-to-r from-cyan-400 via-sky-500 to-transparent mx-auto mt-6 rounded-full animate-pulse-slow" />
-          <div className="mt-3 w-56 h-[1px] mx-auto opacity-60 bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent animate-pulseLine" />
+          <div className={`h-1 w-44 bg-gradient-to-r from-cyan-400 via-sky-500 to-transparent mx-auto mt-6 rounded-full ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
+          <div className={`mt-3 w-56 h-[1px] mx-auto opacity-60 bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent ${enableHeavyMotion ? "animate-pulseLine" : ""}`} />
 
           <p className="text-slate-200/80 text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
             Tell me about your project. I’ll reply with a clear plan, timeline, and next steps. ✨
@@ -412,7 +509,7 @@ const Contact = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left side */}
+          {/* Left */}
           <div
             className={`lg:col-span-5 transition-all duration-1000 delay-200 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
@@ -420,11 +517,10 @@ const Contact = () => {
           >
             <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 sm:p-8 shadow-2xl shadow-black/25 overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-              <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 animate-borderGlow" />
+              <div className={`pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 ${enableHeavyMotion ? "animate-borderGlow" : ""}`} />
 
               <h3 className="text-3xl font-extrabold text-white">
-                Let’s talk <span className="inline-block animate-miniWiggle">🤝</span>
+                Let’s talk <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>🤝</span>
               </h3>
               <p className="text-slate-200/75 mt-2 leading-relaxed">
                 Share your goal, features, and deadline. If you have a reference website, send it too.
@@ -434,18 +530,18 @@ const Contact = () => {
                 {contactInfo.map((info, index) => (
                   <div
                     key={info.label}
-                    className="group relative bg-slate-900/35 border border-slate-700/55 rounded-2xl p-6 overflow-hidden transition-all duration-400 hover:border-cyan-400/30 hover:shadow-xl hover:shadow-cyan-400/10"
+                    className="group relative bg-slate-900/35 border border-slate-700/55 rounded-2xl p-6 overflow-hidden transition-all duration-300 hover:border-cyan-400/30 hover:shadow-xl hover:shadow-cyan-400/10"
                     style={{ animationDelay: `${index * 0.08}s` }}
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${info.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                      <div className="absolute -inset-y-10 -left-24 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[420px] transition-transform duration-700" />
-                    </div>
+                    {enableHeavyMotion && (
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                        <div className="absolute -inset-y-10 -left-24 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[420px] transition-transform duration-700" />
+                      </div>
+                    )}
 
                     <div className="relative flex items-start gap-4">
-                      <div
-                        className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${info.color} flex items-center justify-center shadow-lg shrink-0`}
-                      >
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${info.color} flex items-center justify-center shadow-lg shrink-0`}>
                         <div className="text-white">{info.icon}</div>
                       </div>
 
@@ -463,12 +559,14 @@ const Contact = () => {
               </div>
 
               <div className="mt-6 bg-gradient-to-br from-cyan-500/10 to-sky-500/10 border border-cyan-400/20 rounded-2xl p-6 relative overflow-hidden">
-                <div className="absolute inset-0 opacity-60 pointer-events-none animate-softSheen">
-                  <div className="absolute -inset-y-10 -left-32 w-28 rotate-12 bg-white/10 blur-md" />
-                </div>
+                {enableHeavyMotion && (
+                  <div className={`absolute inset-0 opacity-60 pointer-events-none ${enableHeavyMotion ? "animate-softSheen" : ""}`}>
+                    <div className="absolute -inset-y-10 -left-32 w-28 rotate-12 bg-white/10 blur-md" />
+                  </div>
+                )}
 
                 <div className="text-white font-extrabold text-lg">
-                  Quick note <span className="inline-block animate-sparklePop">✨</span>
+                  Quick note <span className={`inline-block ${enableHeavyMotion ? "animate-sparklePop" : ""}`}>✨</span>
                 </div>
                 <div className="text-slate-200/80 mt-2 leading-relaxed">
                   I can build React frontends, Node APIs, and full-stack apps, clean UI, smooth animations, and scalable
@@ -478,7 +576,7 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Right side: form */}
+          {/* Right: Form */}
           <div
             className={`lg:col-span-7 transition-all duration-1000 delay-300 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
@@ -486,19 +584,18 @@ const Contact = () => {
           >
             <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 sm:p-10 shadow-2xl shadow-black/25 overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-              <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 animate-borderGlow2" />
+              <div className={`pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 ${enableHeavyMotion ? "animate-borderGlow2" : ""}`} />
 
               <div className="flex items-start justify-between gap-4 mb-8">
                 <div>
                   <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
-                    Send a message <span className="inline-block animate-miniWiggle">💬</span>
+                    Send a message <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>💬</span>
                   </h3>
                   <p className="text-slate-200/70 mt-2">I usually reply quickly, especially during PKT daytime. ⚡</p>
                 </div>
 
                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/35 border border-slate-700/55 text-slate-200 font-extrabold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className={`w-2.5 h-2.5 rounded-full bg-green-400 ${enableHeavyMotion ? "animate-pulse" : ""}`} />
                   <span>Available</span>
                 </div>
               </div>
@@ -513,6 +610,7 @@ const Contact = () => {
                     placeholder="Muhammad Ali"
                     required
                     emoji="👤"
+                    enableHeavyMotion={enableHeavyMotion}
                   />
                   <Field
                     label="Your Email"
@@ -523,6 +621,7 @@ const Contact = () => {
                     placeholder="you@email.com"
                     required
                     emoji="📧"
+                    enableHeavyMotion={enableHeavyMotion}
                   />
                 </div>
 
@@ -534,6 +633,7 @@ const Contact = () => {
                     onChange={handleChange}
                     placeholder="+92 3xx xxxxxxx"
                     emoji="📱"
+                    enableHeavyMotion={enableHeavyMotion}
                   />
                   <Field
                     label="Subject"
@@ -543,6 +643,7 @@ const Contact = () => {
                     placeholder="Project inquiry"
                     required
                     emoji="📝"
+                    enableHeavyMotion={enableHeavyMotion}
                   />
                 </div>
 
@@ -562,32 +663,35 @@ const Contact = () => {
                       required
                     />
 
-                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/8 to-sky-500/8" />
-                      <div className="absolute -inset-y-10 -left-28 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[560px] transition-transform duration-700" />
-                    </div>
+                    {enableHeavyMotion && (
+                      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/8 to-sky-500/8" />
+                        <div className="absolute -inset-y-10 -left-28 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[560px] transition-transform duration-700" />
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col items-start gap-4">
-                  {/* UPDATED: primary button cyan, magnet preserved */}
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="group relative inline-flex items-center justify-center gap-3 px-10 py-4 bg-cyan-400 text-black rounded-2xl font-extrabold text-base sm:text-lg overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl hover:shadow-cyan-400/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="group relative inline-flex items-center justify-center gap-3 px-10 py-4 bg-cyan-400 text-black rounded-2xl font-extrabold text-base sm:text-lg overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                      transform: `translate3d(${magnet.x}px, ${magnet.y}px, 0)`,
-                      transition: "transform 0.18s ease-out"
+                      transform: enableHeavyMotion ? `translate3d(${magnet.x}px, ${magnet.y}px, 0)` : "translate3d(0,0,0)",
+                      transition: enableHeavyMotion ? "transform 0.18s ease-out" : undefined
                     }}
                   >
-                    <span className="absolute inset-0 bg-white/18 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_55%)]" />
-                    </span>
+                    {enableHeavyMotion && <span className="absolute inset-0 bg-white/18 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />}
+                    {enableHeavyMotion && (
+                      <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_55%)]" />
+                      </span>
+                    )}
 
                     {isLoading ? (
                       <>
-                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <svg className={`${enableHeavyMotion ? "animate-spin" : ""} h-5 w-5`} fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path
                             className="opacity-75"
@@ -599,11 +703,11 @@ const Contact = () => {
                       </>
                     ) : (
                       <>
-                        <span className="relative flex items-center gap-2">
-                          Send Message <span className="inline-block animate-miniWiggle">🚀</span>
+                        <span className="relative flex items-center gap-2 text-black">
+                          Send Message <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>🚀</span>
                         </span>
                         <svg
-                          className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
+                          className={`w-5 h-5 ${enableHeavyMotion ? "transform group-hover:translate-x-1 transition-transform duration-300" : ""}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -620,7 +724,7 @@ const Contact = () => {
                         {confetti.map((c) => (
                           <span
                             key={c.id}
-                            className="absolute top-0 animate-confetti"
+                            className={`absolute top-0 ${enableHeavyMotion ? "animate-confetti" : ""}`}
                             style={{
                               left: `${c.left}%`,
                               width: `${c.size}px`,
@@ -629,13 +733,13 @@ const Contact = () => {
                               borderRadius: "2px",
                               animationDelay: `${c.delay}s`,
                               animationDuration: `${c.duration}s`,
-                              transform: `translate3d(0,0,0) rotate(${Math.random() * 180}deg)`
+                              transform: `translate3d(0,0,0) rotate(${c.rotate}deg)`
                             }}
                           />
                         ))}
                       </div>
 
-                      <div className="flex items-center gap-2 px-6 py-3 bg-green-500/10 border border-green-500/40 rounded-2xl text-green-300 animate-fadeInUp">
+                      <div className={`flex items-center gap-2 px-6 py-3 bg-green-500/10 border border-green-500/40 rounded-2xl text-green-300 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -645,7 +749,7 @@ const Contact = () => {
                   )}
 
                   {errorMessage && (
-                    <div className="flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-2xl text-red-300 animate-fadeInUp">
+                    <div className={`flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-2xl text-red-300 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -657,7 +761,7 @@ const Contact = () => {
                 </div>
               </form>
 
-              <div className="pointer-events-none absolute -bottom-24 left-1/2 -translate-x-1/2 w-[520px] h-[220px] rounded-full bg-cyan-400/10 blur-3xl animate-pulse-slow" />
+              <div className={`pointer-events-none absolute -bottom-24 left-1/2 -translate-x-1/2 w-[520px] h-[220px] rounded-full bg-cyan-400/10 blur-3xl ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
             </div>
           </div>
         </div>
@@ -906,6 +1010,16 @@ const Contact = () => {
           }
         }
 
+        @keyframes sparklePop {
+          0%,
+          100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.25);
+          }
+        }
+
         .animate-float-smooth {
           animation: float-smooth ease-in-out infinite;
           will-change: transform;
@@ -988,22 +1102,62 @@ const Contact = () => {
           animation: confetti ease-out forwards;
         }
 
+        .animate-sparklePop {
+          animation: sparklePop 1.7s ease-in-out infinite;
+        }
+
         .delay-300 {
           animation-delay: 300ms;
         }
         .delay-700 {
           animation-delay: 700ms;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float-smooth,
+          .animate-aurora-slow,
+          .animate-blobA,
+          .animate-blobB,
+          .animate-blobC,
+          .animate-fadeInUp,
+          .animate-gradient,
+          .animate-pulse-slow,
+          .animate-pulseLine,
+          .animate-scan,
+          .animate-sparkle-drift,
+          .animate-emojiFloat,
+          .animate-shoot,
+          .animate-miniWiggle,
+          .animate-bounceSoft,
+          .animate-borderGlow,
+          .animate-borderGlow2,
+          .animate-softSheen,
+          .animate-confetti,
+          .animate-sparklePop {
+            animation: none !important;
+          }
+        }
       `}</style>
     </section>
   );
 };
 
-const Field = ({ label, name, value, onChange, placeholder, type = "text", required = false, emoji }) => {
+const Field = React.memo(function Field({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+  emoji,
+  enableHeavyMotion
+}) {
   return (
     <div>
       <label className="block text-slate-300 font-semibold mb-2">
-        {label} <span className="text-slate-200/80">{emoji}</span> {required ? <span className="text-sky-300">*</span> : null}
+        {label} <span className="text-slate-200/80">{emoji}</span>{" "}
+        {required ? <span className="text-sky-300">*</span> : null}
       </label>
 
       <div className="relative group">
@@ -1017,13 +1171,15 @@ const Field = ({ label, name, value, onChange, placeholder, type = "text", requi
           className="w-full px-6 py-4 bg-slate-900/35 border border-slate-700/55 rounded-2xl text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-400/10 transition-all duration-300"
         />
 
-        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/7 to-sky-500/7" />
-          <div className="absolute -inset-y-10 -left-28 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[520px] transition-transform duration-700" />
-        </div>
+        {enableHeavyMotion && (
+          <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/7 to-sky-500/7" />
+            <div className="absolute -inset-y-10 -left-28 w-24 rotate-12 bg-white/10 blur-md group-hover:translate-x-[520px] transition-transform duration-700" />
+          </div>
+        )}
       </div>
     </div>
   );
-};
+});
 
 export default Contact;

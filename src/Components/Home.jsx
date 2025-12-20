@@ -1,152 +1,201 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+const makeRng = (seed0) => {
+  let seed = seed0 >>> 0;
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
+
 const Home = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [smoothMouse, setSmoothMouse] = useState({ x: 0, y: 0 });
-  const [lastMoveAt, setLastMoveAt] = useState(Date.now());
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
-  const sectionRef = useRef(null);
+  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
-  // Detect mobile and coarse pointer (touch)
+  const auroraRef = useRef(null);
+  const gridRef = useRef(null);
+  const imageRef = useRef(null);
+
+  const targetRef = useRef({ x: 0, y: 0 });
+  const smoothRef = useRef({ x: 0, y: 0 });
+  const lastMoveRef = useRef(Date.now());
+  const rafRef = useRef(0);
+
+  // Detect mobile, coarse pointer, reduced motion
   useEffect(() => {
     const mqMobile = window.matchMedia("(max-width: 1023px)");
     const mqCoarse = window.matchMedia("(pointer: coarse)");
+    const mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const apply = () => {
       setIsMobile(mqMobile.matches);
       setIsCoarsePointer(mqCoarse.matches);
+      setReducedMotion(mqReduce.matches);
     };
 
     apply();
 
-    if (mqMobile.addEventListener) {
-      mqMobile.addEventListener("change", apply);
-      mqCoarse.addEventListener("change", apply);
-      return () => {
-        mqMobile.removeEventListener("change", apply);
-        mqCoarse.removeEventListener("change", apply);
-      };
-    }
+    const add = (mq, fn) => {
+      if (mq.addEventListener) mq.addEventListener("change", fn);
+      else mq.addListener(fn);
+    };
+    const remove = (mq, fn) => {
+      if (mq.removeEventListener) mq.removeEventListener("change", fn);
+      else mq.removeListener(fn);
+    };
 
-    mqMobile.addListener(apply);
-    mqCoarse.addListener(apply);
+    add(mqMobile, apply);
+    add(mqCoarse, apply);
+    add(mqReduce, apply);
+
     return () => {
-      mqMobile.removeListener(apply);
-      mqCoarse.removeListener(apply);
+      remove(mqMobile, apply);
+      remove(mqCoarse, apply);
+      remove(mqReduce, apply);
     };
   }, []);
 
-  // Mouse move (disable on touch / mobile for performance)
+  const parallaxEnabled = !isMobile && !isCoarsePointer && !reducedMotion;
+
+  // Mouse move, write to refs only (no state)
   useEffect(() => {
-    if (isMobile || isCoarsePointer) return;
+    if (!parallaxEnabled) return;
+
+    let ticking = false;
 
     const handleMouseMove = (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 14;
-      const y = (e.clientY / window.innerHeight - 0.5) * 14;
-      setMousePosition({ x, y });
-      setLastMoveAt(Date.now());
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        ticking = false;
+        const x = (e.clientX / window.innerWidth - 0.5) * 14;
+        const y = (e.clientY / window.innerHeight - 0.5) * 14;
+        targetRef.current.x = x;
+        targetRef.current.y = y;
+        lastMoveRef.current = Date.now();
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [isMobile, isCoarsePointer]);
+  }, [parallaxEnabled]);
 
-  // Smooth parallax (disable on touch / mobile for performance)
+  // RAF loop, update DOM transforms directly (no React re-render)
   useEffect(() => {
-    if (isMobile || isCoarsePointer) return;
-
-    let raf = 0;
-    const loop = () => {
-      setSmoothMouse((prev) => {
-        const dx = mousePosition.x - prev.x;
-        const dy = mousePosition.y - prev.y;
-        return { x: prev.x + dx * 0.07, y: prev.y + dy * 0.07 };
-      });
-      raf = requestAnimationFrame(loop);
+    const resetTransforms = () => {
+      if (auroraRef.current) auroraRef.current.style.transform = "none";
+      if (gridRef.current) gridRef.current.style.transform = "none";
+      if (imageRef.current) imageRef.current.style.transform = "none";
     };
 
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [mousePosition, isMobile, isCoarsePointer]);
+    if (!parallaxEnabled) {
+      cancelAnimationFrame(rafRef.current);
+      resetTransforms();
+      return;
+    }
 
-  const isIdle = !isMobile && !isCoarsePointer && Date.now() - lastMoveAt > 900;
+    const loop = () => {
+      const t = targetRef.current;
+      const s = smoothRef.current;
 
-  // Reduce background elements on mobile to remove lag
+      s.x += (t.x - s.x) * 0.07;
+      s.y += (t.y - s.y) * 0.07;
+
+      const aurora = auroraRef.current;
+      const grid = gridRef.current;
+      const image = imageRef.current;
+
+      if (aurora) {
+        aurora.style.transform = `translate3d(${s.x * 1.2}px, ${s.y * 1.2}px, 0)`;
+      }
+
+      if (grid) {
+        grid.style.transform = `translate3d(${s.x * 0.6}px, ${s.y * 0.6}px, 0)`;
+      }
+
+      if (image) {
+        const idle = Date.now() - lastMoveRef.current > 900;
+        image.style.transform = `perspective(1000px) rotateY(${s.x}deg) rotateX(${-s.y}deg)${
+          idle ? " translate3d(0,-8px,0)" : ""
+        }`;
+      }
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [parallaxEnabled]);
+
+  // Reduce background elements on mobile
   const orbCount = isMobile ? 7 : 14;
   const sparkleCount = isMobile ? 18 : 60;
   const shootingStarCount = isMobile ? 3 : 7;
   const emojiCount = isMobile ? 0 : 22;
 
-  const orbs = useMemo(
-    () =>
-      [...Array(orbCount)].map((_, i) => ({
-        id: i,
-        size: Math.random() * (isMobile ? 260 : 460) + (isMobile ? 160 : 200),
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        color: ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"][i % 4],
-        delay: i * 0.55,
-        duration: Math.random() * (isMobile ? 16 : 18) + (isMobile ? 22 : 28),
-        blur: Math.random() * (isMobile ? 26 : 34) + (isMobile ? 46 : 70),
-        opacity: Math.random() * (isMobile ? 0.06 : 0.08) + (isMobile ? 0.05 : 0.06)
-      })),
-    [orbCount, isMobile]
-  );
+  const orbs = useMemo(() => {
+    const rng = makeRng(seedRef.current + 101);
+    const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
+    return [...Array(orbCount)].map((_, i) => ({
+      id: i,
+      size: rng() * (isMobile ? 260 : 460) + (isMobile ? 160 : 200),
+      left: rng() * 100,
+      top: rng() * 100,
+      color: colors[i % colors.length],
+      delay: i * 0.55,
+      duration: rng() * (isMobile ? 16 : 18) + (isMobile ? 22 : 28),
+      blur: rng() * (isMobile ? 26 : 34) + (isMobile ? 46 : 70),
+      opacity: rng() * (isMobile ? 0.06 : 0.08) + (isMobile ? 0.05 : 0.06)
+    }));
+  }, [orbCount, isMobile]);
 
-  const sparkles = useMemo(
-    () =>
-      [...Array(sparkleCount)].map((_, i) => ({
-        id: i,
-        size: Math.random() * (isMobile ? 2.2 : 2.8) + 1.2,
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        opacity: Math.random() * (isMobile ? 0.22 : 0.35) + 0.1,
-        delay: Math.random() * 5,
-        duration: Math.random() * (isMobile ? 10 : 12) + (isMobile ? 10 : 10)
-      })),
-    [sparkleCount, isMobile]
-  );
+  const sparkles = useMemo(() => {
+    const rng = makeRng(seedRef.current + 202);
+    return [...Array(sparkleCount)].map((_, i) => ({
+      id: i,
+      size: rng() * (isMobile ? 2.2 : 2.8) + 1.2,
+      left: rng() * 100,
+      top: rng() * 100,
+      opacity: rng() * (isMobile ? 0.22 : 0.35) + 0.1,
+      delay: rng() * 5,
+      duration: rng() * (isMobile ? 10 : 12) + 10
+    }));
+  }, [sparkleCount, isMobile]);
 
-  const shootingStars = useMemo(
-    () =>
-      [...Array(shootingStarCount)].map((_, i) => ({
-        id: i,
-        top: Math.random() * 65,
-        delay: Math.random() * 6 + i * 1.2,
-        duration: Math.random() * 1.6 + 1.4,
-        length: Math.random() * (isMobile ? 170 : 220) + (isMobile ? 150 : 180),
-        opacity: Math.random() * (isMobile ? 0.22 : 0.28) + 0.2
-      })),
-    [shootingStarCount, isMobile]
-  );
+  const shootingStars = useMemo(() => {
+    const rng = makeRng(seedRef.current + 303);
+    return [...Array(shootingStarCount)].map((_, i) => ({
+      id: i,
+      top: rng() * 65,
+      delay: rng() * 6 + i * 1.2,
+      duration: rng() * 1.6 + 1.4,
+      length: rng() * (isMobile ? 170 : 220) + (isMobile ? 150 : 180),
+      opacity: rng() * (isMobile ? 0.22 : 0.28) + 0.2
+    }));
+  }, [shootingStarCount, isMobile]);
 
   const emojis = useMemo(() => {
+    const rng = makeRng(seedRef.current + 404);
     const list = ["⚡", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "📦", "🌙", "💡"];
     return [...Array(emojiCount)].map((_, i) => ({
       id: i,
       emoji: list[i % list.length],
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      size: Math.random() * 22 + 16,
-      rotate: Math.random() * 70 - 35,
-      delay: Math.random() * 5,
-      duration: Math.random() * 18 + 18,
-      opacity: Math.random() * 0.16 + 0.06
+      left: rng() * 100,
+      top: rng() * 100,
+      size: rng() * 22 + 16,
+      rotate: rng() * 70 - 35,
+      delay: rng() * 5,
+      duration: rng() * 18 + 18,
+      opacity: rng() * 0.16 + 0.06
     }));
   }, [emojiCount]);
 
-  const parallaxStyle = !isMobile && !isCoarsePointer
-    ? {
-        transform: `translate3d(${smoothMouse.x * 1.2}px, ${smoothMouse.y * 1.2}px, 0)`,
-        transition: "transform 0.12s ease-out"
-      }
-    : { transform: "none" };
-
   return (
     <section
-      ref={sectionRef}
       className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden pt-24 sm:pt-28 lg:pt-[140px] pb-16 sm:pb-20 lg:pb-[90px]"
       id="home"
     >
@@ -160,8 +209,8 @@ const Home = () => {
         <div className="absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-blue-500/10 blur-3xl animate-blobC" />
       </div>
 
-      {/* Aurora parallax */}
-      <div className="absolute inset-0 pointer-events-none" style={parallaxStyle}>
+      {/* Aurora parallax, transform updated via ref */}
+      <div ref={auroraRef} className="absolute inset-0 pointer-events-none will-change-transform">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
@@ -230,7 +279,7 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Floating emojis (disabled on mobile) */}
+      {/* Floating emojis */}
       {emojiCount > 0 && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {emojis.map((e) => (
@@ -254,22 +303,18 @@ const Home = () => {
         </div>
       )}
 
-      {/* Grid overlay parallax (lighter on mobile) */}
+      {/* Grid overlay, transform updated via ref */}
       <div
-        className="absolute inset-0 opacity-[0.06]"
+        ref={gridRef}
+        className="absolute inset-0 opacity-[0.06] will-change-transform"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-          transform:
-            !isMobile && !isCoarsePointer
-              ? `translate3d(${smoothMouse.x * 0.6}px, ${smoothMouse.y * 0.6}px, 0)`
-              : "none",
-          transition: "transform 0.12s ease-out"
+          backgroundSize: "80px 80px"
         }}
       />
 
-      {/* Scanline shimmer (disable on mobile for performance) */}
+      {/* Scanline shimmer */}
       {!isMobile && (
         <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
           <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
@@ -282,7 +327,7 @@ const Home = () => {
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1300px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Right image, SHOW FIRST ON MOBILE so it is visible */}
+          {/* Right image */}
           <div className="lg:col-span-5 flex justify-center order-1 lg:order-2 animate-slideInRight">
             <div className="relative group">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-3xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow" />
@@ -296,17 +341,11 @@ const Home = () => {
               </div>
 
               <div
-                className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 backdrop-blur-sm shadow-2xl shadow-cyan-400/15"
+                ref={imageRef}
+                className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 backdrop-blur-sm shadow-2xl shadow-cyan-400/15 will-change-transform"
                 style={{
                   width: isMobile ? "320px" : "460px",
-                  height: isMobile ? "320px" : "460px",
-                  transform:
-                    !isMobile && !isCoarsePointer
-                      ? `perspective(1000px) rotateY(${smoothMouse.x}deg) rotateX(${-smoothMouse.y}deg) ${
-                          isIdle ? "translate3d(0,-8px,0)" : ""
-                        }`
-                      : "none",
-                  transition: "transform 0.26s ease-out"
+                  height: isMobile ? "320px" : "460px"
                 }}
               >
                 <img
@@ -317,7 +356,8 @@ const Home = () => {
                   loading="eager"
                   decoding="async"
                   onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
+                    e.currentTarget.src =
+                      "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
                   }}
                 />
 
@@ -412,7 +452,7 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Buttons (no hover position changes) */}
+            {/* Buttons */}
             <div
               className="flex flex-col sm:flex-row gap-5 animate-fadeInUp opacity-0"
               style={{
@@ -425,7 +465,7 @@ const Home = () => {
                 className="relative px-10 py-5 text-lg sm:text-xl bg-cyan-400 rounded-xl font-extrabold overflow-hidden"
                 style={{ color: "#000" }}
               >
-                <span className="relative z-10 flex items-center gap-2">
+                <span className="relative z-10 flex items-center gap-2 text-black">
                   Download CV <span className="inline-block">📄</span>
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
@@ -918,6 +958,7 @@ const Chip = ({ text }) => {
 
 const SocialCircle = ({ href, children, borderHover, bgHover, iconHover }) => {
   const isExternal = href?.startsWith("http");
+
   return (
     <a
       href={href}
