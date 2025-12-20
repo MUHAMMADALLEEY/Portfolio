@@ -193,18 +193,6 @@ const About = () => {
                   </span>
                 </div>
 
-                <h3 className="text-3xl sm:text-5xl font-extrabold leading-tight text-white">
-                  Hi, I'm{" "}
-                  <span
-                    className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 ${
-                      reduceMotion ? "" : "animate-gradient"
-                    }`}
-                    style={{ backgroundSize: "200% auto" }}
-                  >
-                    Muhammad Ali
-                  </span>
-                </h3>
-
                 <div className="flex items-center gap-2 mt-5">
                   <div
                     className={`h-1 w-20 bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full ${
