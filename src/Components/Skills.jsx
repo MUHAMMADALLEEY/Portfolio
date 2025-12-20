@@ -35,8 +35,8 @@ const Skills = () => {
 
   const frontendSkills = useMemo(
     () => [
-      { name: "HTML", level: 90, color: "from-orange-500 to-red-500", Icon: FiCode },
-      { name: "CSS", level: 90, color: "from-blue-500 to-cyan-500", Icon: FiPenTool },
+      { name: "React.js", level: 90, color: "from-orange-500 to-red-500", Icon: FiCode },
+      { name: "Next.js", level: 90, color: "from-blue-500 to-cyan-500", Icon: FiPenTool },
       { name: "Tailwind", level: 70, color: "from-cyan-400 to-blue-500", Icon: FiGrid },
       { name: "JavaScript", level: 80, color: "from-yellow-500 to-orange-500", Icon: FiZap }
     ],
@@ -46,9 +46,9 @@ const Skills = () => {
   const backendSkills = useMemo(
     () => [
       { name: "React.js", level: 80, color: "from-cyan-400 to-blue-600", Icon: FiBox },
-      { name: "Firebase", level: 85, color: "from-yellow-500 to-orange-600", Icon: FiCloud },
+      { name: "Express.js", level: 85, color: "from-yellow-500 to-orange-600", Icon: FiCloud },
       { name: "MongoDB", level: 80, color: "from-green-500 to-emerald-600", Icon: FiDatabase },
-      { name: "Express & Node", level: 80, color: "from-green-600 to-lime-600", Icon: FiServer }
+      { name: "Node.js", level: 80, color: "from-green-600 to-lime-600", Icon: FiServer }
     ],
     []
   );
