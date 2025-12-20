@@ -4,20 +4,59 @@ const Home = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [smoothMouse, setSmoothMouse] = useState({ x: 0, y: 0 });
   const [lastMoveAt, setLastMoveAt] = useState(Date.now());
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
   const sectionRef = useRef(null);
 
+  // Detect mobile and coarse pointer (touch)
   useEffect(() => {
+    const mqMobile = window.matchMedia("(max-width: 1023px)");
+    const mqCoarse = window.matchMedia("(pointer: coarse)");
+
+    const apply = () => {
+      setIsMobile(mqMobile.matches);
+      setIsCoarsePointer(mqCoarse.matches);
+    };
+
+    apply();
+
+    if (mqMobile.addEventListener) {
+      mqMobile.addEventListener("change", apply);
+      mqCoarse.addEventListener("change", apply);
+      return () => {
+        mqMobile.removeEventListener("change", apply);
+        mqCoarse.removeEventListener("change", apply);
+      };
+    }
+
+    mqMobile.addListener(apply);
+    mqCoarse.addListener(apply);
+    return () => {
+      mqMobile.removeListener(apply);
+      mqCoarse.removeListener(apply);
+    };
+  }, []);
+
+  // Mouse move (disable on touch / mobile for performance)
+  useEffect(() => {
+    if (isMobile || isCoarsePointer) return;
+
     const handleMouseMove = (e) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 14;
       const y = (e.clientY / window.innerHeight - 0.5) * 14;
       setMousePosition({ x, y });
       setLastMoveAt(Date.now());
     };
+
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  }, [isMobile, isCoarsePointer]);
 
+  // Smooth parallax (disable on touch / mobile for performance)
   useEffect(() => {
+    if (isMobile || isCoarsePointer) return;
+
     let raf = 0;
     const loop = () => {
       setSmoothMouse((prev) => {
@@ -27,59 +66,65 @@ const Home = () => {
       });
       raf = requestAnimationFrame(loop);
     };
+
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [mousePosition]);
+  }, [mousePosition, isMobile, isCoarsePointer]);
 
-  const isIdle = Date.now() - lastMoveAt > 900;
+  const isIdle = !isMobile && !isCoarsePointer && Date.now() - lastMoveAt > 900;
 
-  // background orbs
+  // Reduce background elements on mobile to remove lag
+  const orbCount = isMobile ? 7 : 14;
+  const sparkleCount = isMobile ? 18 : 60;
+  const shootingStarCount = isMobile ? 3 : 7;
+  const emojiCount = isMobile ? 0 : 22;
+
   const orbs = useMemo(
     () =>
-      [...Array(14)].map((_, i) => ({
+      [...Array(orbCount)].map((_, i) => ({
         id: i,
-        size: Math.random() * 460 + 200,
+        size: Math.random() * (isMobile ? 260 : 460) + (isMobile ? 160 : 200),
         left: Math.random() * 100,
         top: Math.random() * 100,
         color: ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"][i % 4],
         delay: i * 0.55,
-        duration: Math.random() * 18 + 28,
-        blur: Math.random() * 34 + 70,
-        opacity: Math.random() * 0.08 + 0.06
+        duration: Math.random() * (isMobile ? 16 : 18) + (isMobile ? 22 : 28),
+        blur: Math.random() * (isMobile ? 26 : 34) + (isMobile ? 46 : 70),
+        opacity: Math.random() * (isMobile ? 0.06 : 0.08) + (isMobile ? 0.05 : 0.06)
       })),
-    []
+    [orbCount, isMobile]
   );
 
   const sparkles = useMemo(
     () =>
-      [...Array(60)].map((_, i) => ({
+      [...Array(sparkleCount)].map((_, i) => ({
         id: i,
-        size: Math.random() * 2.8 + 1.2,
+        size: Math.random() * (isMobile ? 2.2 : 2.8) + 1.2,
         left: Math.random() * 100,
         top: Math.random() * 100,
-        opacity: Math.random() * 0.35 + 0.1,
+        opacity: Math.random() * (isMobile ? 0.22 : 0.35) + 0.1,
         delay: Math.random() * 5,
-        duration: Math.random() * 12 + 10
+        duration: Math.random() * (isMobile ? 10 : 12) + (isMobile ? 10 : 10)
       })),
-    []
+    [sparkleCount, isMobile]
   );
 
   const shootingStars = useMemo(
     () =>
-      [...Array(7)].map((_, i) => ({
+      [...Array(shootingStarCount)].map((_, i) => ({
         id: i,
         top: Math.random() * 65,
         delay: Math.random() * 6 + i * 1.2,
         duration: Math.random() * 1.6 + 1.4,
-        length: Math.random() * 220 + 180,
-        opacity: Math.random() * 0.28 + 0.2
+        length: Math.random() * (isMobile ? 170 : 220) + (isMobile ? 150 : 180),
+        opacity: Math.random() * (isMobile ? 0.22 : 0.28) + 0.2
       })),
-    []
+    [shootingStarCount, isMobile]
   );
 
   const emojis = useMemo(() => {
     const list = ["⚡", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "📦", "🌙", "💡"];
-    return [...Array(22)].map((_, i) => ({
+    return [...Array(emojiCount)].map((_, i) => ({
       id: i,
       emoji: list[i % list.length],
       left: Math.random() * 100,
@@ -90,17 +135,20 @@ const Home = () => {
       duration: Math.random() * 18 + 18,
       opacity: Math.random() * 0.16 + 0.06
     }));
-  }, []);
+  }, [emojiCount]);
+
+  const parallaxStyle = !isMobile && !isCoarsePointer
+    ? {
+        transform: `translate3d(${smoothMouse.x * 1.2}px, ${smoothMouse.y * 1.2}px, 0)`,
+        transition: "transform 0.12s ease-out"
+      }
+    : { transform: "none" };
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden"
+      className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden pt-24 sm:pt-28 lg:pt-[140px] pb-16 sm:pb-20 lg:pb-[90px]"
       id="home"
-      style={{
-        paddingTop: "140px",
-        paddingBottom: "90px"
-      }}
     >
       {/* Base background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
@@ -113,13 +161,7 @@ const Home = () => {
       </div>
 
       {/* Aurora parallax */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          transform: `translate3d(${smoothMouse.x * 1.2}px, ${smoothMouse.y * 1.2}px, 0)`,
-          transition: "transform 0.12s ease-out"
-        }}
-      >
+      <div className="absolute inset-0 pointer-events-none" style={parallaxStyle}>
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
@@ -188,53 +230,109 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Floating emojis */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {emojis.map((e) => (
-          <div
-            key={e.id}
-            className="absolute animate-emojiFloat select-none"
-            style={{
-              left: `${e.left}%`,
-              top: `${e.top}%`,
-              fontSize: `${e.size}px`,
-              opacity: e.opacity,
-              filter: "drop-shadow(0 0 14px rgba(34, 211, 238, 0.14))",
-              ["--r"]: `${e.rotate}deg`,
-              animationDelay: `${e.delay}s`,
-              animationDuration: `${e.duration}s`
-            }}
-          >
-            {e.emoji}
-          </div>
-        ))}
-      </div>
+      {/* Floating emojis (disabled on mobile) */}
+      {emojiCount > 0 && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {emojis.map((e) => (
+            <div
+              key={e.id}
+              className="absolute animate-emojiFloat select-none"
+              style={{
+                left: `${e.left}%`,
+                top: `${e.top}%`,
+                fontSize: `${e.size}px`,
+                opacity: e.opacity,
+                filter: "drop-shadow(0 0 14px rgba(34, 211, 238, 0.14))",
+                ["--r"]: `${e.rotate}deg`,
+                animationDelay: `${e.delay}s`,
+                animationDuration: `${e.duration}s`
+              }}
+            >
+              {e.emoji}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* Grid overlay parallax */}
+      {/* Grid overlay parallax (lighter on mobile) */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
-          transform: `translate3d(${smoothMouse.x * 0.6}px, ${smoothMouse.y * 0.6}px, 0)`,
+          transform:
+            !isMobile && !isCoarsePointer
+              ? `translate3d(${smoothMouse.x * 0.6}px, ${smoothMouse.y * 0.6}px, 0)`
+              : "none",
           transition: "transform 0.12s ease-out"
         }}
       />
 
-      {/* Scanline shimmer */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
-        <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
-      </div>
+      {/* Scanline shimmer (disable on mobile for performance) */}
+      {!isMobile && (
+        <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
+          <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
+        </div>
+      )}
 
       {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-[1300px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Right image, SHOW FIRST ON MOBILE so it is visible */}
+          <div className="lg:col-span-5 flex justify-center order-1 lg:order-2 animate-slideInRight">
+            <div className="relative group">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-3xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow" />
+
+              <div className="absolute -inset-10 animate-spin-slow opacity-25">
+                <div className="h-full w-full rounded-full border-2 border-cyan-500/35 border-t-cyan-400 border-r-sky-400" />
+              </div>
+
+              <div className="absolute -inset-5 animate-spin-reverse opacity-15">
+                <div className="h-full w-full rounded-full border border-blue-500/35 border-b-blue-400" />
+              </div>
+
+              <div
+                className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 backdrop-blur-sm shadow-2xl shadow-cyan-400/15"
+                style={{
+                  width: isMobile ? "320px" : "460px",
+                  height: isMobile ? "320px" : "460px",
+                  transform:
+                    !isMobile && !isCoarsePointer
+                      ? `perspective(1000px) rotateY(${smoothMouse.x}deg) rotateX(${-smoothMouse.y}deg) ${
+                          isIdle ? "translate3d(0,-8px,0)" : ""
+                        }`
+                      : "none",
+                  transition: "transform 0.26s ease-out"
+                }}
+              >
+                <img
+                  src="/images/file2.png"
+                  alt="Muhammad Ali"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ objectPosition: "center 30%" }}
+                  loading="eager"
+                  decoding="async"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
+                  }}
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-sm sm:text-base animate-badgeFloat">
+                  Available for work ✨
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Left */}
-          <div className="lg:col-span-7 space-y-8 animate-slideInLeft">
+          <div className="lg:col-span-7 space-y-8 order-2 lg:order-1 animate-slideInLeft">
             <div className="space-y-6">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight">
                 <span className="text-white block animate-fadeInUp">
@@ -314,10 +412,7 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Extra spacing so content does not look stuck to the top area */}
-            <div className="h-1" />
-
-            {/* Buttons, hover removed */}
+            {/* Buttons (no hover position changes) */}
             <div
               className="flex flex-col sm:flex-row gap-5 animate-fadeInUp opacity-0"
               style={{
@@ -385,50 +480,6 @@ const Home = () => {
               >
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
               </SocialCircle>
-            </div>
-          </div>
-
-          {/* Right image, unchanged sizing */}
-          <div className="lg:col-span-5 flex justify-center animate-slideInRight">
-            <div className="relative group">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-3xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow" />
-
-              <div className="absolute -inset-10 animate-spin-slow opacity-25">
-                <div className="h-full w-full rounded-full border-2 border-cyan-500/35 border-t-cyan-400 border-r-sky-400" />
-              </div>
-
-              <div className="absolute -inset-5 animate-spin-reverse opacity-15">
-                <div className="h-full w-full rounded-full border border-blue-500/35 border-b-blue-400" />
-              </div>
-
-              <div
-                className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 backdrop-blur-sm shadow-2xl shadow-cyan-400/15 transition-all duration-500 group-hover:scale-[1.02] group-hover:border-cyan-300/35"
-                style={{
-                  width: "460px",
-                  height: "460px",
-                  transform: `perspective(1000px) rotateY(${smoothMouse.x}deg) rotateX(${-smoothMouse.y}deg) ${
-                    isIdle ? "translate3d(0,-8px,0)" : ""
-                  }`,
-                  transition: "transform 0.26s ease-out"
-                }}
-              >
-                <img
-                  src="/images/file2.png"
-                  alt="Muhammad Ali"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  style={{ objectPosition: "center 30%" }}
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
-                  }}
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-sm sm:text-base animate-badgeFloat">
-                  Available for work ✨
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -830,6 +881,28 @@ const Home = () => {
         .delay-700 {
           animation-delay: 700ms;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float-smooth,
+          .animate-aurora-slow,
+          .animate-blobA,
+          .animate-blobB,
+          .animate-blobC,
+          .animate-spin-slow,
+          .animate-spin-reverse,
+          .animate-sparkle-drift,
+          .animate-softGlow,
+          .animate-shimmerText,
+          .animate-emojiFloat,
+          .animate-waveHand,
+          .animate-sparklePop,
+          .animate-pulseLine,
+          .animate-scan,
+          .animate-shoot,
+          .animate-badgeFloat {
+            animation: none !important;
+          }
+        }
       `}</style>
     </section>
   );
@@ -898,6 +971,13 @@ const SocialCircle = ({ href, children, borderHover, bgHover, iconHover }) => {
         }
         .animate-orbit {
           animation: orbit 2.8s linear infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-ringPulse,
+          .animate-orbit {
+            animation: none !important;
+          }
         }
       `}</style>
     </a>
