@@ -45,7 +45,7 @@ const Skills = () => {
 
   const backendSkills = useMemo(
     () => [
-      { name: "React.js", level: 80, color: "from-cyan-400 to-blue-600", Icon: FiBox },
+      { name: "PostgreSQL", level: 80, color: "from-cyan-400 to-blue-600", Icon: FiBox },
       { name: "Express.js", level: 85, color: "from-yellow-500 to-orange-600", Icon: FiCloud },
       { name: "MongoDB", level: 80, color: "from-green-500 to-emerald-600", Icon: FiDatabase },
       { name: "Node.js", level: 80, color: "from-green-600 to-lime-600", Icon: FiServer }
