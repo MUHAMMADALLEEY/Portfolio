@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FiBriefcase, FiBookOpen, FiClock, FiLayers, FiCheckCircle, FiArrowRight, FiCalendar, FiHome } from "react-icons/fi";
+import { LuPuzzle } from "react-icons/lu";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -13,12 +15,10 @@ const Resume = () => {
   const [isVisible, setIsVisible] = useState(false);
   const contentRef = useRef(null);
 
-  // performance flags
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
-  // stable seed for background randomness
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
   useEffect(() => {
@@ -68,10 +68,8 @@ const Resume = () => {
 
   const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
 
-  // fewer orbs on mobile/touch/reduced motion
   const orbCount = enableHeavyMotion ? 18 : 8;
 
-  // seeded orbs (stable, no re-layout jitters)
   const orbs = useMemo(() => {
     const rng = makeRng(seedRef.current + 777);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
@@ -90,8 +88,8 @@ const Resume = () => {
 
   const tabs = useMemo(
     () => [
-      { name: "Experience", icon: "💼" },
-      { name: "Education", icon: "🎓" }
+      { name: "Experience", Icon: FiBriefcase },
+      { name: "Education", Icon: FiBookOpen }
     ],
     []
   );
@@ -152,10 +150,10 @@ const Resume = () => {
 
   const summaryCards = useMemo(
     () => [
-      { label: "Experience", value: "2+ Years", icon: "⏱️" },
-      { label: "Projects", value: "15+", icon: "🧩" },
-      { label: "Availability", value: "Open", icon: "✅" },
-      { label: "Timezone", value: "PKT", icon: "🕒" }
+      { label: "Experience", value: "2+ Years", Icon: FiClock },
+      { label: "Projects", value: "15+", Icon: LuPuzzle },
+      { label: "Availability", value: "Open", Icon: FiCheckCircle },
+      { label: "Timezone", value: "PKT", Icon: FiClock }
     ],
     []
   );
@@ -192,12 +190,16 @@ const Resume = () => {
           <div className="relative flex items-center gap-4">
             <span
               className={[
-                "text-5xl leading-none transition-transform duration-300",
+                "w-14 h-14 rounded-2xl flex items-center justify-center",
+                isActive ? "bg-black/10" : "bg-slate-800/40 border border-slate-700/40",
+                "transition-transform duration-300",
                 enableHeavyMotion ? "group-hover:scale-110" : ""
               ].join(" ")}
+              aria-hidden="true"
             >
-              {tab.icon}
+              <tab.Icon className={`w-8 h-8 ${isActive ? "text-black" : "text-cyan-200"}`} />
             </span>
+
             <div className="min-w-0">
               <div className="text-2xl font-extrabold tracking-tight">{tab.name}</div>
               <div className={`text-sm mt-1 ${isActive ? "text-black/70" : "text-slate-400"}`}>Tap to view details</div>
@@ -244,7 +246,7 @@ const Resume = () => {
             <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
               <div className="min-w-0">
                 <p className="text-cyan-200 text-base font-extrabold mb-3 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full border border-cyan-500/25">
-                  <span className="text-lg">🗓️</span>
+                  <FiCalendar className="w-5 h-5" />
                   <span>{item.year}</span>
                 </p>
 
@@ -253,7 +255,7 @@ const Resume = () => {
                 </h3>
 
                 <p className="text-slate-200/90 font-semibold text-2xl flex items-center gap-2">
-                  <span>🏢</span>
+                  <FiHome className="w-6 h-6 text-slate-300" />
                   <span className="break-words">{item.company}</span>
                 </p>
               </div>
@@ -295,14 +297,24 @@ const Resume = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Aurora, disable animation on mobile/touch/reduced motion */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
-        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
-        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
+        <div
+          className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${
+            enableHeavyMotion ? "animate-aurora-slow" : ""
+          }`}
+        />
+        <div
+          className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${
+            enableHeavyMotion ? "animate-aurora-slow delay-700" : ""
+          }`}
+        />
+        <div
+          className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${
+            enableHeavyMotion ? "animate-aurora-slow delay-300" : ""
+          }`}
+        />
       </div>
 
-      {/* Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
@@ -334,7 +346,6 @@ const Resume = () => {
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-        {/* Heading */}
         <div
           className={[
             "text-center mb-14 sm:mb-20 transition-all duration-1000 transform",
@@ -369,7 +380,6 @@ const Resume = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar */}
           <div
             className={[
               "lg:col-span-4 space-y-4 transition-all duration-1000 delay-200 transform",
@@ -378,7 +388,6 @@ const Resume = () => {
           >
             <div className="space-y-4">{tabs.map((t, idx) => <TabButton key={t.name} tab={t} index={idx} />)}</div>
 
-            {/* Summary cards */}
             <div className="relative bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 overflow-hidden shadow-2xl shadow-black/25">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
@@ -390,7 +399,9 @@ const Resume = () => {
                     key={c.label}
                     className="bg-slate-800/30 border border-slate-700/40 rounded-2xl p-5 hover:border-cyan-400/30 transition-all duration-300"
                   >
-                    <div className="text-3xl">{c.icon}</div>
+                    <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                      <c.Icon className="w-6 h-6 text-cyan-200" />
+                    </div>
                     <div className="text-slate-300 text-sm font-semibold mt-2">{c.label}</div>
                     <div className="text-white text-2xl font-extrabold mt-1">{c.value}</div>
                   </div>
@@ -421,7 +432,6 @@ const Resume = () => {
             </div>
           </div>
 
-          {/* Content */}
           <div
             className={[
               "lg:col-span-8 transition-all duration-1000 delay-400 transform",
@@ -433,7 +443,11 @@ const Resume = () => {
                 <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-br from-cyan-400 to-sky-500 shadow-cyan-400/20">
-                      <span className="text-4xl">{tabs[activeTab].icon}</span>
+                      {activeTab === 0 ? (
+                        <FiBriefcase className="w-9 h-9 text-black" />
+                      ) : (
+                        <FiBookOpen className="w-9 h-9 text-black" />
+                      )}
                     </div>
 
                     <div>
@@ -461,14 +475,18 @@ const Resume = () => {
                   </div>
 
                   <div className="hidden lg:flex flex-col items-end">
-                    <div className="px-5 py-2 rounded-full bg-slate-800/40 border border-slate-700/50 text-slate-100 font-extrabold text-lg">
-                      Updated ✅
+                    <div className="px-5 py-2 rounded-full bg-slate-800/40 border border-slate-700/50 text-slate-100 font-extrabold text-lg inline-flex items-center gap-2">
+                      Updated <FiCheckCircle className="w-5 h-5 text-cyan-200" />
                     </div>
                     <div className="text-slate-400 text-sm mt-2">Clean timeline view</div>
                   </div>
                 </div>
 
-                <div className={`text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
+                <div
+                  className={`text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 ${
+                    enableHeavyMotion ? "animate-fadeInUp" : ""
+                  }`}
+                >
                   {activeTab === 0
                     ? "I build modern web apps with strong UI, clean APIs, and reliable delivery. Here are my most recent roles."
                     : "A strong academic base plus practical learning, focused on programming and modern web development."}

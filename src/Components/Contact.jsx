@@ -1,5 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import emailjs from "emailjs-com";
+import {
+  FiMail,
+  FiMessageSquare,
+  FiSend,
+  FiPhone,
+  FiMapPin,
+  FiUser,
+  FiEdit3,
+  FiInfo,
+  FiCheckCircle,
+  FiXCircle,
+  FiZap,
+  FiTool,
+  FiStar,
+  FiTarget,
+  FiCpu,
+  FiTrendingUp
+} from "react-icons/fi";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -26,15 +44,12 @@ const Contact = () => {
   const [smoothMouse, setSmoothMouse] = useState({ x: 0, y: 0 });
   const [magnet, setMagnet] = useState({ x: 0, y: 0 });
 
-  // perf flags
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
-  // stable seed for all decorative randomness
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
-  // avoid re-rendering on every mousemove
   const targetMouseRef = useRef({ x: 0, y: 0 });
   const rafRef = useRef(0);
   const mountedRef = useRef(false);
@@ -86,7 +101,6 @@ const Contact = () => {
 
   const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
 
-  // mouse parallax (optimized), only runs when heavy motion is allowed
   useEffect(() => {
     if (!enableHeavyMotion) {
       setSmoothMouse({ x: 0, y: 0 });
@@ -186,7 +200,6 @@ const Contact = () => {
     [formData.email, formData.message, formData.mobile, formData.name, formData.subject, validate]
   );
 
-  // magnet effect only when heavy motion, keeps same UI but saves work on touch/mobile
   const handleMagnetMove = useCallback(
     (e) => {
       if (!enableHeavyMotion) return;
@@ -200,11 +213,10 @@ const Contact = () => {
 
   const resetMagnet = useCallback(() => setMagnet({ x: 0, y: 0 }), []);
 
-  // fewer decorative elements on mobile/touch/reduced motion
   const orbCount = enableHeavyMotion ? 16 : 8;
   const sparkleCount = enableHeavyMotion ? 60 : 18;
   const starCount = enableHeavyMotion ? 7 : 2;
-  const emojiCount = enableHeavyMotion ? 20 : 8;
+  const floatIconCount = enableHeavyMotion ? 20 : 8;
   const confettiCount = enableHeavyMotion ? 28 : 14;
 
   const orbs = useMemo(() => {
@@ -248,12 +260,12 @@ const Contact = () => {
     }));
   }, [starCount]);
 
-  const floatEmojis = useMemo(() => {
+  const floatingIcons = useMemo(() => {
     const rng = makeRng(seedRef.current + 404);
-    const list = ["📩", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "💡", "🤝", "📅"];
-    return [...Array(emojiCount)].map((_, i) => ({
+    const list = [FiMail, FiStar, FiTrendingUp, FiCpu, FiZap, FiTool, FiTarget, FiSend, FiMessageSquare, FiEdit3];
+    return [...Array(floatIconCount)].map((_, i) => ({
       id: i,
-      emoji: list[i % list.length],
+      Icon: list[i % list.length],
       left: rng() * 100,
       top: rng() * 100,
       size: rng() * 18 + 14,
@@ -262,7 +274,7 @@ const Contact = () => {
       duration: rng() * 18 + 18,
       opacity: rng() * 0.16 + 0.06
     }));
-  }, [emojiCount]);
+  }, [floatIconCount]);
 
   const confetti = useMemo(() => {
     const rng = makeRng(seedRef.current + 505);
@@ -285,7 +297,7 @@ const Contact = () => {
         value: "muhammadali43800@gmail.com",
         hint: "Best for detailed requests",
         color: "from-purple-500 to-pink-500",
-        emoji: "📧",
+        Icon: FiMail,
         icon: (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -302,7 +314,7 @@ const Contact = () => {
         value: "+92 3137149438",
         hint: "Fast response on call or WhatsApp",
         color: "from-cyan-500 to-blue-500",
-        emoji: "📱",
+        Icon: FiPhone,
         icon: (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -319,7 +331,7 @@ const Contact = () => {
         value: "Faisalabad, Pakistan",
         hint: "Timezone: PKT",
         color: "from-green-500 to-emerald-500",
-        emoji: "📍",
+        Icon: FiMapPin,
         icon: (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -364,21 +376,18 @@ const Contact = () => {
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Animated blob mesh */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.58]" style={parallaxStyle}>
         <div className={`absolute -top-52 -left-52 w-[940px] h-[940px] rounded-full bg-purple-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobA" : ""}`} />
         <div className={`absolute top-10 -right-56 w-[980px] h-[980px] rounded-full bg-pink-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobB" : ""}`} />
         <div className={`absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-blobC" : ""}`} />
       </div>
 
-      {/* Soft aurora */}
       <div className="absolute inset-0 pointer-events-none" style={parallaxStyle2}>
         <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
         <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
         <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
-      {/* Floating orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
@@ -399,7 +408,6 @@ const Contact = () => {
         ))}
       </div>
 
-      {/* Sparkles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {sparkles.map((s) => (
           <div
@@ -419,7 +427,6 @@ const Contact = () => {
         ))}
       </div>
 
-      {/* Shooting stars */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {shootingStars.map((st) => (
           <div
@@ -441,29 +448,27 @@ const Contact = () => {
         ))}
       </div>
 
-      {/* Floating emojis */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {floatEmojis.map((e) => (
+        {floatingIcons.map((it) => (
           <div
-            key={e.id}
+            key={it.id}
             className={`absolute select-none ${enableHeavyMotion ? "animate-emojiFloat" : ""}`}
             style={{
-              left: `${e.left}%`,
-              top: `${e.top}%`,
-              fontSize: `${e.size}px`,
-              opacity: e.opacity,
+              left: `${it.left}%`,
+              top: `${it.top}%`,
+              opacity: it.opacity,
               filter: "drop-shadow(0 0 14px rgba(34,211,238,0.14))",
-              ["--r"]: `${e.rotate}deg`,
-              animationDelay: `${e.delay}s`,
-              animationDuration: `${e.duration}s`
+              ["--r"]: `${it.rotate}deg`,
+              animationDelay: `${it.delay}s`,
+              animationDuration: `${it.duration}s`
             }}
+            aria-hidden="true"
           >
-            {e.emoji}
+            <it.Icon style={{ width: `${it.size}px`, height: `${it.size}px` }} className="text-white/90" />
           </div>
         ))}
       </div>
 
-      {/* Cyan grid */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -474,16 +479,13 @@ const Contact = () => {
         }}
       />
 
-      {/* Scanline shimmer */}
       <div className={`absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay ${enableHeavyMotion ? "animate-scan" : ""}`}>
         <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
       </div>
 
-      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-        {/* Header */}
         <div
           className={`text-center mb-14 sm:mb-16 transition-all duration-1000 transform ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
@@ -497,19 +499,20 @@ const Contact = () => {
             >
               Me
             </span>{" "}
-            <span className={`inline-block ${enableHeavyMotion ? "animate-bounceSoft" : ""}`}>📩</span>
+            <span className={`inline-flex align-middle ${enableHeavyMotion ? "animate-bounceSoft" : ""}`} aria-hidden="true">
+              <FiMail className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            </span>
           </h2>
 
           <div className={`h-1 w-44 bg-gradient-to-r from-cyan-400 via-sky-500 to-transparent mx-auto mt-6 rounded-full ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
           <div className={`mt-3 w-56 h-[1px] mx-auto opacity-60 bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent ${enableHeavyMotion ? "animate-pulseLine" : ""}`} />
 
           <p className="text-slate-200/80 text-base sm:text-lg mt-6 max-w-2xl mx-auto leading-relaxed">
-            Tell me about your project. I’ll reply with a clear plan, timeline, and next steps. ✨
+            Tell me about your project. I’ll reply with a clear plan, timeline, and next steps.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left */}
           <div
             className={`lg:col-span-5 transition-all duration-1000 delay-200 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
@@ -519,9 +522,13 @@ const Contact = () => {
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <div className={`pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 ${enableHeavyMotion ? "animate-borderGlow" : ""}`} />
 
-              <h3 className="text-3xl font-extrabold text-white">
-                Let’s talk <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>🤝</span>
+              <h3 className="text-3xl font-extrabold text-white flex items-center gap-3">
+                <span>Let’s talk</span>
+                <span className={`inline-flex ${enableHeavyMotion ? "animate-miniWiggle" : ""}`} aria-hidden="true">
+                  <FiMessageSquare className="w-6 h-6 text-white" />
+                </span>
               </h3>
+
               <p className="text-slate-200/75 mt-2 leading-relaxed">
                 Share your goal, features, and deadline. If you have a reference website, send it too.
               </p>
@@ -548,7 +555,7 @@ const Contact = () => {
                       <div className="min-w-0">
                         <div className="text-slate-300 text-sm font-semibold flex items-center gap-2">
                           <span>{info.label}</span>
-                          <span className="text-slate-200/80">{info.emoji}</span>
+                          <info.Icon className="w-4 h-4 text-slate-200/90" aria-hidden="true" />
                         </div>
                         <div className="text-white text-lg font-extrabold break-words mt-1">{info.value}</div>
                         <div className="text-slate-200/60 text-sm mt-1">{info.hint}</div>
@@ -565,18 +572,20 @@ const Contact = () => {
                   </div>
                 )}
 
-                <div className="text-white font-extrabold text-lg">
-                  Quick note <span className={`inline-block ${enableHeavyMotion ? "animate-sparklePop" : ""}`}>✨</span>
+                <div className="text-white font-extrabold text-lg flex items-center gap-3">
+                  <span>Quick note</span>
+                  <span className={`inline-flex ${enableHeavyMotion ? "animate-sparklePop" : ""}`} aria-hidden="true">
+                    <FiStar className="w-5 h-5 text-white" />
+                  </span>
                 </div>
+
                 <div className="text-slate-200/80 mt-2 leading-relaxed">
-                  I can build React frontends, Node APIs, and full-stack apps, clean UI, smooth animations, and scalable
-                  code.
+                  I can build React frontends, Node APIs, and full stack apps, clean UI, smooth animations, and scalable code.
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right: Form */}
           <div
             className={`lg:col-span-7 transition-all duration-1000 delay-300 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
@@ -588,10 +597,16 @@ const Contact = () => {
 
               <div className="flex items-start justify-between gap-4 mb-8">
                 <div>
-                  <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
-                    Send a message <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>💬</span>
+                  <h3 className="text-3xl sm:text-4xl font-extrabold text-white flex items-center gap-3">
+                    <span>Send a message</span>
+                    <span className={`inline-flex ${enableHeavyMotion ? "animate-miniWiggle" : ""}`} aria-hidden="true">
+                      <FiMessageSquare className="w-6 h-6 text-white" />
+                    </span>
                   </h3>
-                  <p className="text-slate-200/70 mt-2">I usually reply quickly, especially during PKT daytime. ⚡</p>
+                  <p className="text-slate-200/70 mt-2 flex items-center gap-2">
+                    <span>I usually reply quickly, especially during PKT daytime.</span>
+                    <FiZap className="w-4 h-4 text-slate-200/80" aria-hidden="true" />
+                  </p>
                 </div>
 
                 <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/35 border border-slate-700/55 text-slate-200 font-extrabold">
@@ -609,7 +624,7 @@ const Contact = () => {
                     onChange={handleChange}
                     placeholder="Muhammad Ali"
                     required
-                    emoji="👤"
+                    Icon={FiUser}
                     enableHeavyMotion={enableHeavyMotion}
                   />
                   <Field
@@ -620,7 +635,7 @@ const Contact = () => {
                     onChange={handleChange}
                     placeholder="you@email.com"
                     required
-                    emoji="📧"
+                    Icon={FiMail}
                     enableHeavyMotion={enableHeavyMotion}
                   />
                 </div>
@@ -632,7 +647,7 @@ const Contact = () => {
                     value={formData.mobile}
                     onChange={handleChange}
                     placeholder="+92 3xx xxxxxxx"
-                    emoji="📱"
+                    Icon={FiPhone}
                     enableHeavyMotion={enableHeavyMotion}
                   />
                   <Field
@@ -642,14 +657,15 @@ const Contact = () => {
                     onChange={handleChange}
                     placeholder="Project inquiry"
                     required
-                    emoji="📝"
+                    Icon={FiEdit3}
                     enableHeavyMotion={enableHeavyMotion}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-2">
-                    Message <span className="text-slate-200/80">💡</span>
+                  <label className="block text-slate-300 font-semibold mb-2 flex items-center gap-2">
+                    <span>Message</span>
+                    <FiInfo className="w-4 h-4 text-slate-200/80" aria-hidden="true" />
                   </label>
 
                   <div className="relative group">
@@ -682,7 +698,9 @@ const Contact = () => {
                       transition: enableHeavyMotion ? "transform 0.18s ease-out" : undefined
                     }}
                   >
-                    {enableHeavyMotion && <span className="absolute inset-0 bg-white/18 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />}
+                    {enableHeavyMotion && (
+                      <span className="absolute inset-0 bg-white/18 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    )}
                     {enableHeavyMotion && (
                       <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_55%)]" />
@@ -703,17 +721,8 @@ const Contact = () => {
                       </>
                     ) : (
                       <>
-                        <span className="relative flex items-center gap-2 text-black">
-                          Send Message <span className={`inline-block ${enableHeavyMotion ? "animate-miniWiggle" : ""}`}>🚀</span>
-                        </span>
-                        <svg
-                          className={`w-5 h-5 ${enableHeavyMotion ? "transform group-hover:translate-x-1 transition-transform duration-300" : ""}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
+                        <span className="relative flex items-center gap-2 text-black">Send Message</span>
+                        <FiSend className={`w-5 h-5 ${enableHeavyMotion ? "transform group-hover:translate-x-1 transition-transform duration-300" : ""}`} aria-hidden="true" />
                       </>
                     )}
                   </button>
@@ -740,24 +749,23 @@ const Contact = () => {
                       </div>
 
                       <div className={`flex items-center gap-2 px-6 py-3 bg-green-500/10 border border-green-500/40 rounded-2xl text-green-300 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Message sent successfully! 🎉</span>
+                        <FiCheckCircle className="w-5 h-5" aria-hidden="true" />
+                        <span>Message sent successfully!</span>
                       </div>
                     </div>
                   )}
 
                   {errorMessage && (
                     <div className={`flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-2xl text-red-300 ${enableHeavyMotion ? "animate-fadeInUp" : ""}`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <FiXCircle className="w-5 h-5" aria-hidden="true" />
                       <span>{errorMessage}</span>
                     </div>
                   )}
 
-                  <div className="text-xs sm:text-sm text-slate-200/60">Tip, add your budget and deadline for a faster, more accurate reply. 📅</div>
+                  <div className="text-xs sm:text-sm text-slate-200/60 flex items-center gap-2">
+                    <span>Tip, add your budget and deadline for a faster, more accurate reply.</span>
+                    <FiTarget className="w-4 h-4 text-slate-200/70" aria-hidden="true" />
+                  </div>
                 </div>
               </form>
 
@@ -1150,13 +1158,14 @@ const Field = React.memo(function Field({
   placeholder,
   type = "text",
   required = false,
-  emoji,
+  Icon,
   enableHeavyMotion
 }) {
   return (
     <div>
-      <label className="block text-slate-300 font-semibold mb-2">
-        {label} <span className="text-slate-200/80">{emoji}</span>{" "}
+      <label className="block text-slate-300 font-semibold mb-2 flex items-center gap-2">
+        <span>{label}</span>
+        {Icon ? <Icon className="w-4 h-4 text-slate-200/80" aria-hidden="true" /> : null}
         {required ? <span className="text-sky-300">*</span> : null}
       </label>
 

@@ -1,4 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FiCode,
+  FiPenTool,
+  FiZap,
+  FiGrid,
+  FiServer,
+  FiDatabase,
+  FiCloud,
+  FiBox,
+  FiFolder,
+  FiSmile,
+  FiTarget,
+  FiArrowRight
+} from "react-icons/fi";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -13,31 +27,28 @@ const Skills = () => {
   const [animateBars, setAnimateBars] = useState(false);
   const sectionRef = useRef(null);
 
-  // performance flags
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
-  // stable seed for orbs
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
   const frontendSkills = useMemo(
     () => [
-      { name: "HTML", level: 90, color: "from-orange-500 to-red-500", icon: "🌐" },
-      { name: "CSS", level: 90, color: "from-blue-500 to-cyan-500", icon: "🎨" },
-      { name: "Tailwind", level: 70, color: "from-cyan-400 to-blue-500", icon: "💨" },
-      { name: "JavaScript", level: 80, color: "from-yellow-500 to-orange-500", icon: "⚡" }
+      { name: "HTML", level: 90, color: "from-orange-500 to-red-500", Icon: FiCode },
+      { name: "CSS", level: 90, color: "from-blue-500 to-cyan-500", Icon: FiPenTool },
+      { name: "Tailwind", level: 70, color: "from-cyan-400 to-blue-500", Icon: FiGrid },
+      { name: "JavaScript", level: 80, color: "from-yellow-500 to-orange-500", Icon: FiZap }
     ],
     []
   );
 
-  // NOTE: keeping your names as-is, but this is actually full stack tools
   const backendSkills = useMemo(
     () => [
-      { name: "React.js", level: 80, color: "from-cyan-400 to-blue-600", icon: "⚛️" },
-      { name: "Firebase", level: 85, color: "from-yellow-500 to-orange-600", icon: "🔥" },
-      { name: "MongoDB", level: 80, color: "from-green-500 to-emerald-600", icon: "🍃" },
-      { name: "Express & Node", level: 80, color: "from-green-600 to-lime-600", icon: "🚀" }
+      { name: "React.js", level: 80, color: "from-cyan-400 to-blue-600", Icon: FiBox },
+      { name: "Firebase", level: 85, color: "from-yellow-500 to-orange-600", Icon: FiCloud },
+      { name: "MongoDB", level: 80, color: "from-green-500 to-emerald-600", Icon: FiDatabase },
+      { name: "Express & Node", level: 80, color: "from-green-600 to-lime-600", Icon: FiServer }
     ],
     []
   );
@@ -82,10 +93,8 @@ const Skills = () => {
 
   const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
 
-  // fewer orbs on mobile/touch/reduced motion
   const orbCount = enableHeavyMotion ? 18 : 8;
 
-  // seeded stable orbs
   const orbs = useMemo(() => {
     const rng = makeRng(seedRef.current + 333);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
@@ -123,10 +132,10 @@ const Skills = () => {
 
   const Stats = useMemo(
     () => [
-      { label: "Projects Completed", value: "15+", icon: "📁", gradient: "from-purple-500 to-pink-500" },
-      { label: "Technologies", value: "12+", icon: "⚡", gradient: "from-cyan-500 to-blue-500" },
-      { label: "Years Experience", value: "2+", icon: "🎯", gradient: "from-green-500 to-emerald-500" },
-      { label: "Happy Clients", value: "10+", icon: "😊", gradient: "from-orange-500 to-red-500" }
+      { label: "Projects Completed", value: "15+", Icon: FiFolder, gradient: "from-purple-500 to-pink-500" },
+      { label: "Technologies", value: "12+", Icon: FiZap, gradient: "from-cyan-500 to-blue-500" },
+      { label: "Years Experience", value: "2+", Icon: FiTarget, gradient: "from-green-500 to-emerald-500" },
+      { label: "Happy Clients", value: "10+", Icon: FiSmile, gradient: "from-orange-500 to-red-500" }
     ],
     []
   );
@@ -147,7 +156,18 @@ const Skills = () => {
         <div className="group/skill">
           <div className="flex items-center justify-between gap-4 mb-3">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="text-2xl">{skill.icon}</span>
+              <span
+                className={[
+                  "w-10 h-10 rounded-2xl flex items-center justify-center",
+                  accent === "cyan"
+                    ? "bg-cyan-500/12 border border-cyan-500/25"
+                    : "bg-purple-500/12 border border-purple-500/25"
+                ].join(" ")}
+                aria-hidden="true"
+              >
+                <skill.Icon className={accent === "cyan" ? "w-5 h-5 text-cyan-200" : "w-5 h-5 text-purple-200"} />
+              </span>
+
               <h4 className={`text-lg sm:text-xl font-bold text-white truncate transition-colors duration-300 ${hoverText}`}>
                 {skill.name}
               </h4>
@@ -285,7 +305,6 @@ const Skills = () => {
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-        {/* Header */}
         <div
           className={[
             "text-center mb-14 sm:mb-20 transition-all duration-1000 transform",
@@ -330,7 +349,6 @@ const Skills = () => {
           </div>
         </div>
 
-        {/* Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10">
           <div
             className={[
@@ -343,11 +361,7 @@ const Skills = () => {
               subtitle="Client-side Technologies"
               accent="purple"
               iconBg="bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/45"
-              iconSvg={
-                <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-              }
+              iconSvg={<FiCode className="w-9 h-9 text-white" />}
             >
               {frontendSkills.map((skill) => (
                 <SkillRow key={skill.name} skill={skill} accent="purple" />
@@ -366,16 +380,7 @@ const Skills = () => {
               subtitle="Server-side Technologies"
               accent="cyan"
               iconBg="bg-gradient-to-br from-cyan-400 to-sky-500 shadow-cyan-400/20"
-              iconSvg={
-                <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
-                  />
-                </svg>
-              }
+              iconSvg={<FiServer className="w-9 h-9 text-white" />}
             >
               {backendSkills.map((skill) => (
                 <SkillRow key={skill.name} skill={skill} accent="cyan" />
@@ -384,7 +389,6 @@ const Skills = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div
           className={[
             "grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6 mt-14 sm:mt-20 transition-all duration-1000 delay-700 transform",
@@ -412,14 +416,17 @@ const Skills = () => {
               <div className="relative">
                 <div
                   className={[
-                    "text-4xl sm:text-5xl mb-4 inline-block",
+                    "w-14 h-14 mx-auto rounded-2xl mb-4 flex items-center justify-center",
+                    "bg-slate-900/35 border border-slate-700/45",
                     enableHeavyMotion ? "transform group-hover:scale-110 transition-transform duration-500" : ""
                   ].join(" ")}
                 >
-                  {stat.icon}
+                  <stat.Icon className="w-7 h-7 text-slate-100" />
                 </div>
 
-                <h4 className={`text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${stat.gradient} mb-2 sm:mb-3`}>
+                <h4
+                  className={`text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${stat.gradient} mb-2 sm:mb-3`}
+                >
                   {stat.value}
                 </h4>
 
@@ -436,7 +443,6 @@ const Skills = () => {
           ))}
         </div>
 
-        {/* CTA */}
         <div
           className={[
             "mt-14 sm:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-9 sm:p-10",
@@ -444,8 +450,6 @@ const Skills = () => {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
           ].join(" ")}
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
           <div className="text-center relative">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">Let’s build something polished</h3>
             <p className="text-slate-200/80 text-base sm:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
@@ -459,15 +463,8 @@ const Skills = () => {
                 enableHeavyMotion ? "hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
               ].join(" ")}
             >
-              <span style={{color:"black"}}>Get In Touch</span>
-              <svg
-                className={`w-5 h-5 ${enableHeavyMotion ? "transform group-hover:translate-x-1 transition-transform duration-300" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              <span style={{ color: "black" }}>Get In Touch</span>
+              <FiArrowRight className={`w-5 h-5 ${enableHeavyMotion ? "group-hover:translate-x-1 transition-transform duration-300" : ""}`} />
             </a>
 
             <div className="mt-6 text-xs sm:text-sm text-slate-200/60">

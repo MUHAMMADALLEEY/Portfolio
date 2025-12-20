@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { FaGithub, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { FiPhone, FiMail, FiArrowRight, FiCheckCircle } from "react-icons/fi";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -24,7 +26,6 @@ const Home = () => {
   const lastMoveRef = useRef(Date.now());
   const rafRef = useRef(0);
 
-  // Detect mobile, coarse pointer, reduced motion
   useEffect(() => {
     const mqMobile = window.matchMedia("(max-width: 1023px)");
     const mqCoarse = window.matchMedia("(pointer: coarse)");
@@ -60,7 +61,6 @@ const Home = () => {
 
   const parallaxEnabled = !isMobile && !isCoarsePointer && !reducedMotion;
 
-  // Mouse move, write to refs only (no state)
   useEffect(() => {
     if (!parallaxEnabled) return;
 
@@ -84,7 +84,6 @@ const Home = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [parallaxEnabled]);
 
-  // RAF loop, update DOM transforms directly (no React re-render)
   useEffect(() => {
     const resetTransforms = () => {
       if (auroraRef.current) auroraRef.current.style.transform = "none";
@@ -131,7 +130,6 @@ const Home = () => {
     return () => cancelAnimationFrame(rafRef.current);
   }, [parallaxEnabled]);
 
-  // Reduce background elements on mobile
   const orbCount = isMobile ? 7 : 14;
   const sparkleCount = isMobile ? 18 : 60;
   const shootingStarCount = isMobile ? 3 : 7;
@@ -199,24 +197,20 @@ const Home = () => {
       className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden pt-24 sm:pt-28 lg:pt-[140px] pb-16 sm:pb-20 lg:pb-[90px]"
       id="home"
     >
-      {/* Base background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Animated gradient mesh */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.55]">
         <div className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-blobA" />
         <div className="absolute top-16 -right-56 w-[980px] h-[980px] rounded-full bg-sky-500/10 blur-3xl animate-blobB" />
         <div className="absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-blue-500/10 blur-3xl animate-blobC" />
       </div>
 
-      {/* Aurora parallax, transform updated via ref */}
       <div ref={auroraRef} className="absolute inset-0 pointer-events-none will-change-transform">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
       </div>
 
-      {/* Floating orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
@@ -237,7 +231,6 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Sparkles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {sparkles.map((s) => (
           <div
@@ -257,7 +250,6 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Shooting stars */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {shootingStars.map((st) => (
           <div
@@ -279,7 +271,6 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Floating emojis */}
       {emojiCount > 0 && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {emojis.map((e) => (
@@ -303,7 +294,6 @@ const Home = () => {
         </div>
       )}
 
-      {/* Grid overlay, transform updated via ref */}
       <div
         ref={gridRef}
         className="absolute inset-0 opacity-[0.06] will-change-transform"
@@ -314,20 +304,16 @@ const Home = () => {
         }}
       />
 
-      {/* Scanline shimmer */}
       {!isMobile && (
         <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
           <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
         </div>
       )}
 
-      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
-      {/* Content */}
       <div className="relative z-10 w-full max-w-[1300px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-          {/* Right image */}
           <div className="lg:col-span-5 flex justify-center order-1 lg:order-2 animate-slideInRight">
             <div className="relative group">
               <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-3xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow" />
@@ -364,14 +350,14 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-sm sm:text-base animate-badgeFloat">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-sm sm:text-base animate-badgeFloat flex items-center gap-2">
+                  <FiCheckCircle className="text-slate-100" />
                   Available for work ✨
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Left */}
           <div className="lg:col-span-7 space-y-8 order-2 lg:order-1 animate-slideInLeft">
             <div className="space-y-6">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight">
@@ -409,7 +395,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Chips */}
             <div
               className="flex flex-wrap gap-3 animate-fadeInUp opacity-0"
               style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}
@@ -433,7 +418,6 @@ const Home = () => {
               <span className="ml-2 inline-block animate-sparklePop">✨</span>
             </p>
 
-            {/* Stats */}
             <div
               className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl animate-fadeInUp opacity-0"
               style={{ animationDelay: "0.82s", animationFillMode: "forwards" }}
@@ -452,7 +436,6 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Buttons */}
             <div
               className="flex flex-col sm:flex-row gap-5 animate-fadeInUp opacity-0"
               style={{
@@ -466,7 +449,7 @@ const Home = () => {
                 style={{ color: "#000" }}
               >
                 <span className="relative z-10 flex items-center gap-2 text-black">
-                  Download CV <span className="inline-block">📄</span>
+                  Download CV <FiArrowRight />
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
               </a>
@@ -476,13 +459,12 @@ const Home = () => {
                 className="relative px-10 py-5 text-lg sm:text-xl bg-transparent border-2 border-cyan-400/70 rounded-xl font-extrabold text-white overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Hire me <span className="inline-block">🤝</span>
+                  Hire me <FiCheckCircle />
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
               </a>
             </div>
 
-            {/* Social */}
             <div
               className="flex gap-4 animate-fadeInUp opacity-0"
               style={{
@@ -495,32 +477,30 @@ const Home = () => {
                 borderHover="hover:border-cyan-400"
                 bgHover="hover:bg-cyan-400/10"
                 iconHover="group-hover:text-cyan-300"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                  clipRule="evenodd"
-                />
-              </SocialCircle>
+                Icon={FaGithub}
+                label="GitHub"
+              />
 
               <SocialCircle
                 href="#"
                 borderHover="hover:border-sky-400"
                 bgHover="hover:bg-sky-400/10"
                 iconHover="group-hover:text-sky-300"
-              >
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-              </SocialCircle>
+                Icon={FaInstagram}
+                label="Instagram"
+              />
 
               <SocialCircle
                 href="https://www.linkedin.com/in/muhammad-a-105104253/"
                 borderHover="hover:border-blue-500"
                 bgHover="hover:bg-blue-500/10"
                 iconHover="group-hover:text-blue-300"
-              >
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-              </SocialCircle>
+                Icon={FaLinkedinIn}
+                label="LinkedIn"
+              />
             </div>
+
+          
           </div>
         </div>
       </div>
@@ -956,12 +936,14 @@ const Chip = ({ text }) => {
   );
 };
 
-const SocialCircle = ({ href, children, borderHover, bgHover, iconHover }) => {
+const SocialCircle = ({ href, borderHover, bgHover, iconHover, Icon, label }) => {
   const isExternal = href?.startsWith("http");
 
   return (
     <a
       href={href}
+      aria-label={label}
+      title={label}
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
       className={[
@@ -978,13 +960,7 @@ const SocialCircle = ({ href, children, borderHover, bgHover, iconHover }) => {
 
       <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
 
-      <svg
-        className={`w-7 h-7 sm:w-8 sm:h-8 text-slate-400 transition-colors ${iconHover}`}
-        fill="currentColor"
-        viewBox="0 0 24 24"
-      >
-        {children}
-      </svg>
+      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 text-slate-400 transition-colors ${iconHover}`} />
 
       <style jsx>{`
         @keyframes ringPulse {

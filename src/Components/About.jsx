@@ -1,4 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiCpu,
+  FiDatabase,
+  FiShield,
+  FiZap,
+  FiLayers,
+  FiLink2,
+  FiStar
+} from "react-icons/fi";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -30,7 +41,6 @@ const About = () => {
     return () => mq.removeListener(apply);
   }, []);
 
-  // Stable, seeded random so it does not regenerate on every mount/re-render
   const orbs = useMemo(() => {
     const rng = makeRng(seedRef.current + 123);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
@@ -56,22 +66,22 @@ const About = () => {
       {
         title: "Frontend that feels premium",
         desc: "Clean layouts, smooth animations, pixel-perfect responsiveness, and great UX for real users.",
-        icon: "✨"
+        Icon: FiStar
       },
       {
         title: "Backend that scales",
         desc: "Well-structured APIs, validation, auth, database design, and code that is easy to maintain.",
-        icon: "⚙️"
+        Icon: FiCpu
       },
       {
         title: "Fast delivery, clear communication",
         desc: "Daily updates, organized tasks, and clean commits, so you always know what is happening.",
-        icon: "📌"
+        Icon: FiLayers
       },
       {
         title: "Performance and SEO mindset",
         desc: "Optimized bundles, lazy loading, caching basics, and technical SEO friendly pages.",
-        icon: "🚀"
+        Icon: FiZap
       }
     ],
     []
@@ -79,10 +89,10 @@ const About = () => {
 
   const whatIDo = useMemo(
     () => [
-      { icon: "🧩", title: "Build UI", text: "Landing pages, dashboards, admin panels, components, animations." },
-      { icon: "🔐", title: "Auth and Security", text: "JWT, role-based access, protected routes, best practices." },
-      { icon: "🗄️", title: "Database", text: "MongoDB schemas, indexes, data modeling, migrations planning." },
-      { icon: "🔌", title: "Integrations", text: "Payments, email, third-party APIs, file uploads, webhooks." }
+      { Icon: FiLayers, title: "Build UI", text: "Landing pages, dashboards, admin panels, components, animations." },
+      { Icon: FiShield, title: "Auth and Security", text: "JWT, role-based access, protected routes, best practices." },
+      { Icon: FiDatabase, title: "Database", text: "MongoDB schemas, indexes, data modeling, migrations planning." },
+      { Icon: FiLink2, title: "Integrations", text: "Payments, email, third-party APIs, file uploads, webhooks." }
     ],
     []
   );
@@ -92,17 +102,14 @@ const About = () => {
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="about"
     >
-      {/* Base background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Aurora layers */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
       </div>
 
-      {/* Floating orbs (static DOM, only CSS animates) */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
@@ -122,7 +129,6 @@ const About = () => {
         ))}
       </div>
 
-      {/* Grid overlay */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -132,11 +138,9 @@ const About = () => {
         }}
       />
 
-      {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-        {/* Heading */}
         <div
           className={`text-center mb-12 sm:mb-16 transition-all duration-1000 transform ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
@@ -154,16 +158,18 @@ const About = () => {
             </span>
           </h2>
 
-          <div className={`h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full ${reduceMotion ? "" : "animate-pulse-slow"}`} />
+          <div
+            className={`h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full ${
+              reduceMotion ? "" : "animate-pulse-slow"
+            }`}
+          />
 
           <p className="text-slate-200/90 text-lg sm:text-xl mt-6 max-w-3xl mx-auto leading-relaxed">
             I build modern, fast, and beautiful web applications, with clean code and a strong focus on user experience.
           </p>
         </div>
 
-        {/* Main layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left */}
           <div
             className={`lg:col-span-7 transition-all duration-1000 delay-200 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
@@ -200,9 +206,15 @@ const About = () => {
                 </h3>
 
                 <div className="flex items-center gap-2 mt-5">
-                  <div className={`h-1 w-20 bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full ${reduceMotion ? "" : "animate-pulse-slow"}`} />
                   <div
-                    className={`h-1 w-10 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full ${reduceMotion ? "" : "animate-pulse-slow delay-300"}`}
+                    className={`h-1 w-20 bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full ${
+                      reduceMotion ? "" : "animate-pulse-slow"
+                    }`}
+                  />
+                  <div
+                    className={`h-1 w-10 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full ${
+                      reduceMotion ? "" : "animate-pulse-slow delay-300"
+                    }`}
                   />
                 </div>
 
@@ -212,7 +224,6 @@ const About = () => {
                   maintain. If you want someone who cares about details and delivers on time, I can help.
                 </p>
 
-                {/* Skill tags */}
                 <div className="flex flex-wrap gap-3 mt-7">
                   {skillTags.map((skill, index) => (
                     <span
@@ -234,7 +245,6 @@ const About = () => {
                   ))}
                 </div>
 
-                {/* Buttons */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
                   <a
                     href="#contact"
@@ -242,32 +252,19 @@ const About = () => {
                   >
                     <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     <span className="relative text-black">Let's Work Together</span>
-                    <svg
-                      className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
+                    <FiArrowRight className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" />
                   </a>
 
                   <a
                     href="#resume"
                     className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-slate-900/40 border border-cyan-400/40 text-white text-lg sm:text-xl font-extrabold rounded-xl hover:border-cyan-300/70 hover:bg-slate-900/55 transition-all duration-300 transform hover:scale-105"
                   >
-                    View Resume <span className="text-xl">📄</span>
+                    View Resume <FiCheckCircle className="w-6 h-6" />
                   </a>
                 </div>
               </div>
             </div>
 
-            {/* Highlights */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-8">
               {highlights.map((h, idx) => (
                 <div
@@ -283,7 +280,9 @@ const About = () => {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/7 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative flex items-start gap-4">
-                    <div className="text-4xl">{h.icon}</div>
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                      <h.Icon className="w-7 h-7 text-cyan-200" />
+                    </div>
                     <div>
                       <h4 className="text-2xl font-extrabold text-white group-hover:text-cyan-200 transition-colors duration-300">
                         {h.title}
@@ -296,7 +295,6 @@ const About = () => {
             </div>
           </div>
 
-          {/* Right */}
           <div
             className={`lg:col-span-5 transition-all duration-1000 delay-400 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
@@ -334,7 +332,9 @@ const About = () => {
                         : { animationDelay: `${0.55 + idx * 0.08}s`, animationFillMode: "forwards" }
                     }
                   >
-                    <div className="text-4xl">{item.icon}</div>
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                      <item.Icon className="w-7 h-7 text-cyan-200" />
+                    </div>
                     <div>
                       <div className="text-2xl font-extrabold text-white">{item.title}</div>
                       <div className="text-slate-200/90 text-lg mt-1 leading-relaxed">{item.text}</div>
@@ -352,15 +352,19 @@ const About = () => {
             </div>
 
             <div className="mt-8 relative bg-gradient-to-br from-cyan-500/12 to-blue-500/10 backdrop-blur-xl border border-cyan-400/25 rounded-3xl p-8 sm:p-9 overflow-hidden">
-              <div className={`${reduceMotion ? "hidden" : "absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer"}`} />
+              <div
+                className={`${
+                  reduceMotion ? "hidden" : "absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer"
+                }`}
+              />
               <div className="relative">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <h4 className="text-3xl font-extrabold text-white">Availability</h4>
                     <p className="text-slate-100/90 text-lg mt-2">Full-time and freelance work</p>
                   </div>
-                  <div className="px-5 py-2 rounded-full bg-slate-900/35 border border-slate-700/50 text-slate-100 font-extrabold text-lg">
-                    Open ✅
+                  <div className="px-5 py-2 rounded-full bg-slate-900/35 border border-slate-700/50 text-slate-100 font-extrabold text-lg flex items-center gap-2">
+                    Open <FiCheckCircle className="w-5 h-5" />
                   </div>
                 </div>
 
@@ -382,19 +386,7 @@ const About = () => {
                   >
                     <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     <span className="relative text-black">Get In Touch</span>
-                    <svg
-                      className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
+                    <FiArrowRight className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" />
                   </a>
                 </div>
               </div>

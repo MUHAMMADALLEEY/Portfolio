@@ -173,7 +173,7 @@ const Header = () => {
                   className="group relative inline-flex items-center justify-center gap-2 px-9 py-3.5 rounded-xl text-lg font-extrabold transition-all duration-300 hover:scale-[1.04] hover:shadow-xl hover:shadow-cyan-400/30 overflow-hidden"
                 >
                   <span className="absolute inset-0  -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  <span className="backdrop-blur-xl border-b border-slate-800/50 shadow-2xl shadow-cyan-400/10 text-xl">Hire Me</span>
+                  <span className="backdrop-blur-xl border-b border-slate-800/50 shadow-2xl shadow-cyan-400/10 text-black text-xl">Hire Me</span>
                   <svg
                     className="relative w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
                     fill="none"
