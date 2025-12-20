@@ -349,10 +349,7 @@ const Contact = () => {
   );
 
   const parallaxStyle = enableHeavyMotion
-    ? {
-        transform: `translate3d(${smoothMouse.x}px, ${smoothMouse.y}px, 0)`,
-        transition: "transform 0.12s ease-out"
-      }
+    ? { transform: `translate3d(${smoothMouse.x}px, ${smoothMouse.y}px, 0)`, transition: "transform 0.12s ease-out" }
     : undefined;
 
   const parallaxStyle2 = enableHeavyMotion
@@ -370,10 +367,7 @@ const Contact = () => {
     : undefined;
 
   return (
-    <section
-      className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
-      id="contact"
-    >
+    <section className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden" id="contact">
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
       <div className="absolute inset-0 pointer-events-none opacity-[0.58]" style={parallaxStyle}>
@@ -486,11 +480,7 @@ const Contact = () => {
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-        <div
-          className={`text-center mb-14 sm:mb-16 transition-all duration-1000 transform ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
-          }`}
-        >
+        <div className={`text-center mb-14 sm:mb-16 transition-all duration-1000 transform ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"}`}>
           <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight inline-block text-white">
             Contact{" "}
             <span
@@ -513,11 +503,7 @@ const Contact = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          <div
-            className={`lg:col-span-5 transition-all duration-1000 delay-200 transform ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
-            }`}
-          >
+          <div className={`lg:col-span-5 transition-all duration-1000 delay-200 transform ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"}`}>
             <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 sm:p-8 shadow-2xl shadow-black/25 overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <div className={`pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 ${enableHeavyMotion ? "animate-borderGlow" : ""}`} />
@@ -529,9 +515,7 @@ const Contact = () => {
                 </span>
               </h3>
 
-              <p className="text-slate-200/75 mt-2 leading-relaxed">
-                Share your goal, features, and deadline. If you have a reference website, send it too.
-              </p>
+              <p className="text-slate-200/75 mt-2 leading-relaxed">Share your goal, features, and deadline. If you have a reference website, send it too.</p>
 
               <div className="mt-7 grid grid-cols-1 gap-4">
                 {contactInfo.map((info, index) => (
@@ -586,11 +570,7 @@ const Contact = () => {
             </div>
           </div>
 
-          <div
-            className={`lg:col-span-7 transition-all duration-1000 delay-300 transform ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
-            }`}
-          >
+          <div className={`lg:col-span-7 transition-all duration-1000 delay-300 transform ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"}`}>
             <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 sm:p-10 shadow-2xl shadow-black/25 overflow-hidden relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
               <div className={`pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-white/8 ${enableHeavyMotion ? "animate-borderGlow2" : ""}`} />
@@ -617,53 +597,17 @@ const Contact = () => {
 
               <form onSubmit={handleSubmit} className="space-y-6" onMouseMove={handleMagnetMove} onMouseLeave={resetMagnet}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Field
-                    label="Your Name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Muhammad Ali"
-                    required
-                    Icon={FiUser}
-                    enableHeavyMotion={enableHeavyMotion}
-                  />
-                  <Field
-                    label="Your Email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="you@email.com"
-                    required
-                    Icon={FiMail}
-                    enableHeavyMotion={enableHeavyMotion}
-                  />
+                  <Field label="Your Name" name="name" value={formData.name} onChange={handleChange} placeholder="Muhammad Ali" required Icon={FiUser} enableHeavyMotion={enableHeavyMotion} />
+                  <Field label="Your Email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="you@email.com" required Icon={FiMail} enableHeavyMotion={enableHeavyMotion} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Field
-                    label="Mobile (optional)"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleChange}
-                    placeholder="+92 3xx xxxxxxx"
-                    Icon={FiPhone}
-                    enableHeavyMotion={enableHeavyMotion}
-                  />
-                  <Field
-                    label="Subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    placeholder="Project inquiry"
-                    required
-                    Icon={FiEdit3}
-                    enableHeavyMotion={enableHeavyMotion}
-                  />
+                  <Field label="Mobile (optional)" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="+92 3xx xxxxxxx" Icon={FiPhone} enableHeavyMotion={enableHeavyMotion} />
+                  <Field label="Subject" name="subject" value={formData.subject} onChange={handleChange} placeholder="Project inquiry" required Icon={FiEdit3} enableHeavyMotion={enableHeavyMotion} />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-2 flex items-center gap-2">
+                  <label className=" text-slate-300 font-semibold mb-2 flex items-center gap-2">
                     <span>Message</span>
                     <FiInfo className="w-4 h-4 text-slate-200/80" aria-hidden="true" />
                   </label>
@@ -689,27 +633,15 @@ const Contact = () => {
                 </div>
 
                 <div className="flex flex-col items-start gap-4">
+                  {/* Send Message button: animations removed */}
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="group relative inline-flex items-center justify-center gap-3 px-10 py-4 bg-cyan-400 text-black rounded-2xl font-extrabold text-base sm:text-lg overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      transform: enableHeavyMotion ? `translate3d(${magnet.x}px, ${magnet.y}px, 0)` : "translate3d(0,0,0)",
-                      transition: enableHeavyMotion ? "transform 0.18s ease-out" : undefined
-                    }}
+                    className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-cyan-400 text-black rounded-2xl font-extrabold text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {enableHeavyMotion && (
-                      <span className="absolute inset-0 bg-white/18 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    )}
-                    {enableHeavyMotion && (
-                      <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),transparent_55%)]" />
-                      </span>
-                    )}
-
                     {isLoading ? (
                       <>
-                        <svg className={`${enableHeavyMotion ? "animate-spin" : ""} h-5 w-5`} fill="none" viewBox="0 0 24 24">
+                        <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path
                             className="opacity-75"
@@ -717,12 +649,12 @@ const Contact = () => {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
                         </svg>
-                        <span className="relative">Sending...</span>
+                        <span>Sending...</span>
                       </>
                     ) : (
                       <>
-                        <span className="relative flex items-center gap-2 text-black">Send Message</span>
-                        <FiSend className={`w-5 h-5 ${enableHeavyMotion ? "transform group-hover:translate-x-1 transition-transform duration-300" : ""}`} aria-hidden="true" />
+                        <span className="text-black">Send Message</span>
+                        <FiSend className="w-5 h-5" aria-hidden="true" />
                       </>
                     )}
                   </button>
@@ -1150,20 +1082,10 @@ const Contact = () => {
   );
 };
 
-const Field = React.memo(function Field({
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false,
-  Icon,
-  enableHeavyMotion
-}) {
+const Field = React.memo(function Field({ label, name, value, onChange, placeholder, type = "text", required = false, Icon, enableHeavyMotion }) {
   return (
     <div>
-      <label className="block text-slate-300 font-semibold mb-2 flex items-center gap-2">
+      <label className="block text-slate-300 font-semibold mb-2 items-center gap-2">
         <span>{label}</span>
         {Icon ? <Icon className="w-4 h-4 text-slate-200/80" aria-hidden="true" /> : null}
         {required ? <span className="text-sky-300">*</span> : null}
