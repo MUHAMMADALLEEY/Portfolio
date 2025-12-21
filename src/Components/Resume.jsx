@@ -117,13 +117,6 @@ const Resume = () => {
         description: "Built dynamic, responsive web applications using React.js and related libraries.",
         skills: ["React", "JavaScript", "API"]
       },
-      {
-        year: "2024 - Sep",
-        title: "Backend Developer",
-        company: "Remote",
-        description: "Designed and implemented backend APIs, Firebase, and database management solutions.",
-        skills: ["Firebase", "MongoDB", "Express"]
-      }
     ],
     []
   );
