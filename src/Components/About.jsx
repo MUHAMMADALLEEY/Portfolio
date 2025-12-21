@@ -57,7 +57,7 @@ const About = () => {
   }, []);
 
   const skillTags = useMemo(
-    () => ["React", "Node.js", "MongoDB", "Tailwind", "JavaScript", "Express", "Firebase", "REST APIs"],
+    () => ["React", "Node.js", "MongoDB", "Tailwind", "JavaScript", "Express", "PostgreSQL", "REST APIs"],
     []
   );
 
@@ -363,7 +363,7 @@ const About = () => {
                   </div>
                   <div className="bg-slate-900/35 border border-slate-700/45 rounded-2xl p-5">
                     <div className="text-slate-200/80 text-base font-semibold">Timezone</div>
-                    <div className="text-white text-2xl font-extrabold mt-1">PKT</div>
+                    <div className="text-white text-2xl font-extrabold mt-1"></div>
                   </div>
                 </div>
 

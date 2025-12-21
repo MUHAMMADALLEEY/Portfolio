@@ -11,7 +11,9 @@ import {
   FiFolder,
   FiSmile,
   FiTarget,
-  FiArrowRight
+  FiArrowRight,
+  FiChevronLeft,
+  FiChevronRight
 } from "react-icons/fi";
 
 const makeRng = (seed0) => {
@@ -21,6 +23,16 @@ const makeRng = (seed0) => {
     return seed / 4294967296;
   };
 };
+
+const getInitials = (name = "") => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "U";
+  const first = parts[0]?.[0] || "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : "";
+  return (first + last).toUpperCase();
+};
+
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 const Skills = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -132,9 +144,9 @@ const Skills = () => {
 
   const Stats = useMemo(
     () => [
-      { label: "Projects Completed", value: "15+", Icon: FiFolder, gradient: "from-purple-500 to-pink-500" },
+      { label: "Projects Completed", value: "Many", Icon: FiFolder, gradient: "from-purple-500 to-pink-500" },
       { label: "Technologies", value: "12+", Icon: FiZap, gradient: "from-cyan-500 to-blue-500" },
-      { label: "Years Experience", value: "2+", Icon: FiTarget, gradient: "from-green-500 to-emerald-500" },
+      { label: "Years Experience", value: "2 +", Icon: FiTarget, gradient: "from-green-500 to-emerald-500" },
       { label: "Happy Clients", value: "10+", Icon: FiSmile, gradient: "from-orange-500 to-red-500" }
     ],
     []
@@ -259,6 +271,41 @@ const Skills = () => {
     },
     [enableHeavyMotion]
   );
+
+  const testimonials = useMemo(
+    () => [
+        {
+        name: "Mustafa Ali",
+        role: "Software Engineer @ Switchboard | Full Stack Developer | Delivering Scalable Tech That Drives Growth",
+        quote:
+          "I had the opportunity to manage Muhammad Ali directly, and he consistently impressed me with his frontend expertise. He takes Figma designs and converts them into clean, reusable React and Next.js components with accuracy and attention to detail. His understanding of UI structure, responsiveness, and modern frontend practices made him one of the most reliable developers on the team. Muhammad Ali would be a strong addition to any engineering team seeking a skilled and dependable frontend developer.",
+        avatar: "https://media.licdn.com/dms/image/v2/D4D03AQHAGEou5jsHZQ/profile-displayphoto-crop_800_800/B4DZkWKoA8IcAI-/0/1757013509676?e=1767830400&v=beta&t=3wsqWK8OuJBN-UXwPj5QQ2W5FIBEz1rHI98SH-X9zZw" 
+    },
+     ],
+    []
+  );
+
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+
+  const current = testimonials[activeTestimonial];
+
+  const nextTestimonial = useCallback(() => {
+    setExpanded(false);
+    setActiveTestimonial((i) => (i + 1) % testimonials.length);
+  }, [testimonials.length]);
+
+  const prevTestimonial = useCallback(() => {
+    setExpanded(false);
+    setActiveTestimonial((i) => (i - 1 + testimonials.length) % testimonials.length);
+  }, [testimonials.length]);
+
+  const displayedQuote = useMemo(() => {
+    const q = current?.quote || "";
+    if (expanded) return q;
+    if (q.length <= 260) return q;
+    return q.slice(0, 260).trimEnd() + "…";
+  }, [current?.quote, expanded]);
 
   return (
     <section
@@ -443,33 +490,138 @@ const Skills = () => {
           ))}
         </div>
 
+        {/* Testimonials (replaces the CTA block) */}
         <div
           className={[
-            "mt-14 sm:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-9 sm:p-10",
-            "transition-all duration-1000 delay-900 transform",
+            "mt-14 sm:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10",
+            "transition-all duration-1000 delay-900 transform overflow-hidden",
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
           ].join(" ")}
         >
-          <div className="text-center relative">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-4">Let’s build something polished</h3>
-            <p className="text-slate-200/80 text-base sm:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-              If you want clean UI, smooth animations, and a reliable backend, I’m ready to help.
-            </p>
-
-            <a
-              href="#contact"
-              className={[
-                "inline-flex items-center gap-3 px-9 sm:px-10 py-4 bg-cyan-400 text-black rounded-xl text-base sm:text-lg font-extrabold transition-all duration-300 group",
-                enableHeavyMotion ? "hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
-              ].join(" ")}
-            >
-              <span style={{ color: "black" }}>Get In Touch</span>
-              <FiArrowRight className={`w-5 h-5 ${enableHeavyMotion ? "group-hover:translate-x-1 transition-transform duration-300" : ""}`} />
-            </a>
-
-            <div className="mt-6 text-xs sm:text-sm text-slate-200/60">
-              Available for freelance, long term collaboration, and product builds
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+            <div className="min-w-0">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h3>
+              <p className="text-slate-200/70 text-sm sm:text-base mt-2 max-w-2xl">
+                Feedback from people I have worked with, focused on delivery, ownership, and quality.
+              </p>
             </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={prevTestimonial}
+                className={[
+                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
+                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
+                  enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+                ].join(" ")}
+                aria-label="Previous testimonial"
+              >
+                <FiChevronLeft className="w-5 h-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={nextTestimonial}
+                className={[
+                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
+                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
+                  enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+                ].join(" ")}
+                aria-label="Next testimonial"
+              >
+                <FiChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative rounded-3xl overflow-hidden border border-slate-700/55">
+            {/* purple tinted card background, like your screenshot, but keeping your theme */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-purple-500/20 to-slate-900/10" />
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_55%)]" />
+
+            <div className="relative p-7 sm:p-10">
+              <div className="flex items-start gap-4 sm:gap-5">
+                {/* Avatar */}
+                <div className="shrink-0">
+                  {current?.avatar ? (
+                    <img
+                      src={current.avatar}
+                      alt={current.name}
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-white/20"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-extrabold">
+                      {getInitials(current?.name)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-white font-extrabold text-lg sm:text-xl truncate">{current?.name}</div>
+                      <div className="text-white/75 text-xs sm:text-sm mt-1">{current?.role}</div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {testimonials.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setExpanded(false);
+                            setActiveTestimonial(i);
+                          }}
+                          className={[
+                            "w-2.5 h-2.5 rounded-full transition-all duration-200",
+                            i === activeTestimonial ? "bg-white/90" : "bg-white/35 hover:bg-white/55"
+                          ].join(" ")}
+                          aria-label={`Go to testimonial ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">
+                    {displayedQuote}
+                  </p>
+
+                  {current?.quote?.length > 260 && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((v) => !v)}
+                      className="mt-4 text-white/80 hover:text-white text-sm font-semibold underline underline-offset-4"
+                    >
+                      {expanded ? "See less" : "See more"}
+                    </button>
+                  )}
+
+                  <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                    <div className="text-white/65 text-xs sm:text-sm">
+                      {activeTestimonial + 1} of {testimonials.length}
+                    </div>
+
+                    <a
+                      href="#contact"
+                      className={[
+                        "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
+                        "bg-cyan-400 text-black border border-cyan-300/30",
+                        enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
+                      ].join(" ")}
+                    >
+                      <span style={{ color: "black" }}>Get In Touch</span>
+                      <FiArrowRight className={`w-5 h-5 ${enableHeavyMotion ? "group-hover:translate-x-1 transition-transform duration-300" : ""}`} />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* small helper note to keep spacing similar to your old CTA */}
+          <div className="mt-6 text-xs sm:text-sm text-slate-200/55 text-center">
+            You can add more testimonials by updating the testimonials array.
           </div>
         </div>
       </div>

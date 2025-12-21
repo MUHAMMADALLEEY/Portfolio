@@ -402,8 +402,8 @@ const Home = () => {
               <Chip text="React ⚛️" />
               <Chip text="Node.js 🟩" />
               <Chip text="MongoDB 🍃" />
-              <Chip text="Firebase 🔥" />
               <Chip text="UI Animations ✨" />
+              <Chip text="PostgreSQL 🐘" />
             </div>
 
             <p
@@ -423,11 +423,11 @@ const Home = () => {
               style={{ animationDelay: "0.82s", animationFillMode: "forwards" }}
             >
               <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3">
-                <p className="text-white font-extrabold text-lg">3+</p>
+                <p className="text-white font-extrabold text-lg">2+</p>
                 <p className="text-slate-300 text-sm">Years experience</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3">
-                <p className="text-white font-extrabold text-lg">20+</p>
+                <p className="text-white font-extrabold text-lg">Multiple</p>
                 <p className="text-slate-300 text-sm">Projects delivered</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md px-4 py-3">

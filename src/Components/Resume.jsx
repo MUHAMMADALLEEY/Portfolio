@@ -97,7 +97,14 @@ const Resume = () => {
   const experienceData = useMemo(
     () => [
       {
-        year: "2025 - present",
+        year: "Sep 2025 - present",
+        title: "FullStack Developer",
+        company: "Expert Texh",
+        description: "Designed and developed responsive, user-friendly full stack applications, implementing scalable backend APIs, efficient data handling, and optimized frontend performance for a smooth user experience.",
+        skills: ["React", "Node.js", "Express", "PostgreSQL", "Next" ]
+      },
+        {
+        year: "May 2024 - Dec 2024",
         title: "Web Developer",
         company: "&Build",
         description: "Created responsive, user-friendly interfaces and optimized website performance.",
@@ -151,9 +158,9 @@ const Resume = () => {
   const summaryCards = useMemo(
     () => [
       { label: "Experience", value: "2+ Years", Icon: FiClock },
-      { label: "Projects", value: "15+", Icon: LuPuzzle },
+      { label: "Projects", value: "Multiple", Icon: LuPuzzle },
       { label: "Availability", value: "Open", Icon: FiCheckCircle },
-      { label: "Timezone", value: "PKT", Icon: FiClock }
+      { label: "Timezone", value: "", Icon: FiClock }
     ],
     []
   );
