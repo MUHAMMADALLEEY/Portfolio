@@ -1,6 +1,9 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaGithub, FaInstagram, FaLinkedinIn } from "react-icons/fa";
-import { FiPhone, FiMail, FiArrowRight, FiCheckCircle } from "react-icons/fi";
+import { FiArrowRight, FiCheckCircle } from "react-icons/fi";
+import Snowfall from "react-snowfall";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -8,6 +11,79 @@ const makeRng = (seed0) => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
+};
+
+const Chip = ({ text }) => {
+  return (
+    <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 font-semibold text-sm sm:text-base backdrop-blur-md hover:bg-white/10 transition-all duration-300 hover:scale-[1.03]">
+      {text}
+    </span>
+  );
+};
+
+const SocialCircle = ({ href, borderHover, bgHover, iconHover, Icon, label }) => {
+  const isExternal = href?.startsWith("http");
+
+  return (
+    <a
+      href={href}
+      aria-label={label}
+      title={label}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
+      className={[
+        "group w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-800/40 backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
+        "transition-all duration-300 hover:scale-110 hover:-translate-y-1 relative overflow-hidden",
+        borderHover,
+        bgHover,
+      ].join(" ")}
+    >
+      <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <span className="absolute inset-0 rounded-full ring-1 ring-white/10 animate-ringPulse" />
+        <span className="absolute -inset-6 rounded-full border border-white/10 animate-orbit" />
+      </span>
+
+      <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
+
+      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 text-slate-400 transition-colors ${iconHover}`} />
+
+      <style jsx>{`
+        @keyframes ringPulse {
+          0% {
+            transform: scale(1);
+            opacity: 0.18;
+          }
+          100% {
+            transform: scale(1.38);
+            opacity: 0;
+          }
+        }
+        @keyframes orbit {
+          0% {
+            transform: rotate(0deg);
+            opacity: 0.2;
+          }
+          100% {
+            transform: rotate(360deg);
+            opacity: 0.2;
+          }
+        }
+        .animate-ringPulse {
+          animation: ringPulse 0.95s ease-out infinite;
+        }
+        .animate-orbit {
+          animation: orbit 2.8s linear infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-ringPulse,
+          .animate-orbit {
+            animation: none !important;
+          }
+        }
+      `}</style>
+    </a>
+  );
 };
 
 const Home = () => {
@@ -147,7 +223,7 @@ const Home = () => {
       delay: i * 0.55,
       duration: rng() * (isMobile ? 16 : 18) + (isMobile ? 22 : 28),
       blur: rng() * (isMobile ? 26 : 34) + (isMobile ? 46 : 70),
-      opacity: rng() * (isMobile ? 0.06 : 0.08) + (isMobile ? 0.05 : 0.06)
+      opacity: rng() * (isMobile ? 0.06 : 0.08) + (isMobile ? 0.05 : 0.06),
     }));
   }, [orbCount, isMobile]);
 
@@ -160,7 +236,7 @@ const Home = () => {
       top: rng() * 100,
       opacity: rng() * (isMobile ? 0.22 : 0.35) + 0.1,
       delay: rng() * 5,
-      duration: rng() * (isMobile ? 10 : 12) + 10
+      duration: rng() * (isMobile ? 10 : 12) + 10,
     }));
   }, [sparkleCount, isMobile]);
 
@@ -172,7 +248,7 @@ const Home = () => {
       delay: rng() * 6 + i * 1.2,
       duration: rng() * 1.6 + 1.4,
       length: rng() * (isMobile ? 170 : 220) + (isMobile ? 150 : 180),
-      opacity: rng() * (isMobile ? 0.22 : 0.28) + 0.2
+      opacity: rng() * (isMobile ? 0.22 : 0.28) + 0.2,
     }));
   }, [shootingStarCount, isMobile]);
 
@@ -188,7 +264,7 @@ const Home = () => {
       rotate: rng() * 70 - 35,
       delay: rng() * 5,
       duration: rng() * 18 + 18,
-      opacity: rng() * 0.16 + 0.06
+      opacity: rng() * 0.16 + 0.06,
     }));
   }, [emojiCount]);
 
@@ -197,21 +273,26 @@ const Home = () => {
       className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden pt-24 sm:pt-28 lg:pt-[140px] pb-16 sm:pb-20 lg:pb-[90px]"
       id="home"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
+      {/* Snowfall must be ABOVE background layers */}
+      <div className="absolute inset-0 z-[6] pointer-events-none">
+        <Snowfall color="#82C3D9" snowflakeCount={isMobile ? 80 : 160} />
+      </div>
 
-      <div className="absolute inset-0 pointer-events-none opacity-[0.55]">
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
+
+      <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.55]">
         <div className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-blobA" />
         <div className="absolute top-16 -right-56 w-[980px] h-[980px] rounded-full bg-sky-500/10 blur-3xl animate-blobB" />
         <div className="absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-blue-500/10 blur-3xl animate-blobC" />
       </div>
 
-      <div ref={auroraRef} className="absolute inset-0 pointer-events-none will-change-transform">
+      <div ref={auroraRef} className="absolute inset-0 z-[2] pointer-events-none will-change-transform">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
             key={o.id}
@@ -225,13 +306,13 @@ const Home = () => {
               background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
               animationDelay: `${o.delay}s`,
               animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`
+              filter: `blur(${o.blur}px)`,
             }}
           />
         ))}
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none">
         {sparkles.map((s) => (
           <div
             key={s.id}
@@ -244,13 +325,13 @@ const Home = () => {
               opacity: s.opacity,
               animationDelay: `${s.delay}s`,
               animationDuration: `${s.duration}s`,
-              filter: "blur(0.2px)"
+              filter: "blur(0.2px)",
             }}
           />
         ))}
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none">
         {shootingStars.map((st) => (
           <div
             key={st.id}
@@ -265,14 +346,14 @@ const Home = () => {
               animationDuration: `${st.duration}s`,
               background:
                 "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(34,211,238,0.35) 70%, rgba(255,255,255,0) 100%)",
-              filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.18))"
+              filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.18))",
             }}
           />
         ))}
       </div>
 
       {emojiCount > 0 && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none">
           {emojis.map((e) => (
             <div
               key={e.id}
@@ -285,7 +366,7 @@ const Home = () => {
                 filter: "drop-shadow(0 0 14px rgba(34, 211, 238, 0.14))",
                 ["--r"]: `${e.rotate}deg`,
                 animationDelay: `${e.delay}s`,
-                animationDuration: `${e.duration}s`
+                animationDuration: `${e.duration}s`,
               }}
             >
               {e.emoji}
@@ -296,21 +377,21 @@ const Home = () => {
 
       <div
         ref={gridRef}
-        className="absolute inset-0 opacity-[0.06] will-change-transform"
+        className="absolute inset-0 z-[2] opacity-[0.06] will-change-transform"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
-          backgroundSize: "80px 80px"
+          backgroundSize: "80px 80px",
         }}
       />
 
       {!isMobile && (
-        <div className="absolute inset-0 pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
+        <div className="absolute inset-0 z-[4] pointer-events-none opacity-[0.10] mix-blend-overlay animate-scan">
           <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
         </div>
       )}
 
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
+      <div className="absolute inset-0 z-[4] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
@@ -331,7 +412,7 @@ const Home = () => {
                 className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 backdrop-blur-sm shadow-2xl shadow-cyan-400/15 will-change-transform"
                 style={{
                   width: isMobile ? "320px" : "460px",
-                  height: isMobile ? "320px" : "460px"
+                  height: isMobile ? "320px" : "460px",
                 }}
               >
                 <img
@@ -369,7 +450,7 @@ const Home = () => {
                   className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 block animate-fadeInUp animate-gradient animate-softGlow"
                   style={{
                     animationDelay: "0.2s",
-                    backgroundSize: "220% 220%"
+                    backgroundSize: "220% 220%",
                   }}
                 >
                   Muhammad Ali
@@ -381,7 +462,7 @@ const Home = () => {
                   className="text-3xl sm:text-4xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-fadeInUp animate-shimmerText"
                   style={{
                     animationDelay: "0.4s",
-                    WebkitTextStroke: "0.5px rgba(34, 211, 238, 0.22)"
+                    WebkitTextStroke: "0.5px rgba(34, 211, 238, 0.22)",
                   }}
                 >
                   FullStack Developer
@@ -410,7 +491,7 @@ const Home = () => {
               className="text-slate-200 text-lg sm:text-xl lg:text-2xl leading-relaxed max-w-4xl animate-fadeInUp opacity-0"
               style={{
                 animationDelay: "0.7s",
-                animationFillMode: "forwards"
+                animationFillMode: "forwards",
               }}
             >
               I'm a Full Stack Developer focused on building fast, modern, and scalable web apps. Clean UI,
@@ -440,7 +521,7 @@ const Home = () => {
               className="flex flex-col sm:flex-row gap-5 animate-fadeInUp opacity-0"
               style={{
                 animationDelay: "0.9s",
-                animationFillMode: "forwards"
+                animationFillMode: "forwards",
               }}
             >
               <a
@@ -469,7 +550,7 @@ const Home = () => {
               className="flex gap-4 animate-fadeInUp opacity-0"
               style={{
                 animationDelay: "1.05s",
-                animationFillMode: "forwards"
+                animationFillMode: "forwards",
               }}
             >
               <SocialCircle
@@ -499,8 +580,6 @@ const Home = () => {
                 label="LinkedIn"
               />
             </div>
-
-          
           </div>
         </div>
       </div>
@@ -928,77 +1007,5 @@ const Home = () => {
   );
 };
 
-const Chip = ({ text }) => {
-  return (
-    <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 font-semibold text-sm sm:text-base backdrop-blur-md hover:bg-white/10 transition-all duration-300 hover:scale-[1.03]">
-      {text}
-    </span>
-  );
-};
-
-const SocialCircle = ({ href, borderHover, bgHover, iconHover, Icon, label }) => {
-  const isExternal = href?.startsWith("http");
-
-  return (
-    <a
-      href={href}
-      aria-label={label}
-      title={label}
-      target={isExternal ? "_blank" : undefined}
-      rel={isExternal ? "noopener noreferrer" : undefined}
-      className={[
-        "group w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-800/40 backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
-        "transition-all duration-300 hover:scale-110 hover:-translate-y-1 relative overflow-hidden",
-        borderHover,
-        bgHover
-      ].join(" ")}
-    >
-      <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span className="absolute inset-0 rounded-full ring-1 ring-white/10 animate-ringPulse" />
-        <span className="absolute -inset-6 rounded-full border border-white/10 animate-orbit" />
-      </span>
-
-      <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
-
-      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 text-slate-400 transition-colors ${iconHover}`} />
-
-      <style jsx>{`
-        @keyframes ringPulse {
-          0% {
-            transform: scale(1);
-            opacity: 0.18;
-          }
-          100% {
-            transform: scale(1.38);
-            opacity: 0;
-          }
-        }
-        @keyframes orbit {
-          0% {
-            transform: rotate(0deg);
-            opacity: 0.2;
-          }
-          100% {
-            transform: rotate(360deg);
-            opacity: 0.2;
-          }
-        }
-        .animate-ringPulse {
-          animation: ringPulse 0.95s ease-out infinite;
-        }
-        .animate-orbit {
-          animation: orbit 2.8s linear infinite;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .animate-ringPulse,
-          .animate-orbit {
-            animation: none !important;
-          }
-        }
-      `}</style>
-    </a>
-  );
-};
-
 export default Home;
+  

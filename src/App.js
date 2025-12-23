@@ -13,13 +13,11 @@ import Portfolio from "./Components/Portfolio";
 import Resume from "./Components/Resume";
 import Skills from "./Components/Skills";
 import Contact from "./Components/Contact";
-
 import ProjectDetails from "./Components/ProjectDetails";
 
 function MainPage() {
   return (
     <>
-      <Header />
       <Home />
       <About />
       <Portfolio />
@@ -30,20 +28,41 @@ function MainPage() {
   );
 }
 
+const LayoutWithHeader = ({ children }) => {
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
+};
+
 function App() {
   useEffect(() => {
-    AOS.init({
-      duration: 1000,
-      once: true
-    });
+    AOS.init({ duration: 1000, once: true });
     document.title = "Muhammad Ali";
   }, []);
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/projects/:slug" element={<ProjectDetails />} />
+        <Route
+          path="/"
+          element={
+            <LayoutWithHeader>
+              <MainPage />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/projects/:slug"
+          element={
+            <LayoutWithHeader>
+              <ProjectDetails />
+            </LayoutWithHeader>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

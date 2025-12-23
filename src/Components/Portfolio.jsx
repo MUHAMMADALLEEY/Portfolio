@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { projects } from "../data/projects";
+import Snowfall from "react-snowfall";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -226,6 +227,14 @@ const Portfolio = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
+          <div className="absolute inset-0 z-[6] pointer-events-none">
+  <Snowfall
+    color="#82C3D9"
+    snowflakeCount={reduceMotion ? 0 : 120}
+    style={{ width: "100%", height: "100%" }}
+  />
+</div>
+
           {currentProjects.map((project, localIndex) => {
             const globalIndex = start + localIndex;
 

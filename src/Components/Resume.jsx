@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiBriefcase, FiBookOpen, FiClock, FiLayers, FiCheckCircle, FiArrowRight, FiCalendar, FiHome } from "react-icons/fi";
 import { LuPuzzle } from "react-icons/lu";
+import Snowfall from "react-snowfall";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -228,6 +229,8 @@ const Resume = () => {
           ].join(" ")}
           style={enableHeavyMotion ? { animationDelay: `${index * 0.12}s` } : undefined}
         >
+   
+
           <div
             className={[
               "absolute left-0 top-0 w-5 h-5 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full -translate-x-[11px] shadow-lg shadow-cyan-400/20",
@@ -346,12 +349,20 @@ const Resume = () => {
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
+               <div className="absolute inset-0 z-[6] pointer-events-none">
+  <Snowfall
+    color="#82C3D9"
+    snowflakeCount={reduceMotion ? 0 : 120}
+    style={{ width: "100%", height: "100%" }}
+  />
+</div>
         <div
           className={[
             "text-center mb-14 sm:mb-20 transition-all duration-1000 transform",
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
           ].join(" ")}
         >
+          
           <div className="inline-block relative">
             <h2 className="text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-4 tracking-tight text-white">
               Resume{" "}

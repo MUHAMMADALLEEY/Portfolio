@@ -15,6 +15,7 @@ import {
   FiChevronLeft,
   FiChevronRight
 } from "react-icons/fi";
+import Snowfall from "react-snowfall";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -313,6 +314,13 @@ const Skills = () => {
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="skills"
     >
+             <div className="absolute inset-0 z-[6] pointer-events-none">
+  <Snowfall
+    color="#82C3D9"
+    snowflakeCount={reduceMotion ? 0 : 120}
+    style={{ width: "100%", height: "100%" }}
+  />
+</div>
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
       <div className="absolute inset-0 pointer-events-none">

@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Snowfall from "react-snowfall";
 import {
   FiArrowRight,
   FiCheckCircle,
@@ -8,7 +11,7 @@ import {
   FiZap,
   FiLayers,
   FiLink2,
-  FiStar
+  FiStar,
 } from "react-icons/fi";
 
 const makeRng = (seed0) => {
@@ -52,12 +55,21 @@ const About = () => {
       color: colors[i % colors.length],
       delay: i * 0.65,
       duration: rng() * 18 + 26,
-      blur: rng() * 30 + 70
+      blur: rng() * 30 + 70,
     }));
   }, []);
 
   const skillTags = useMemo(
-    () => ["React", "Node.js", "MongoDB", "Tailwind", "JavaScript", "Express", "PostgreSQL", "REST APIs"],
+    () => [
+      "React",
+      "Node.js",
+      "MongoDB",
+      "Tailwind",
+      "JavaScript",
+      "Express",
+      "PostgreSQL",
+      "REST APIs",
+    ],
     []
   );
 
@@ -66,33 +78,49 @@ const About = () => {
       {
         title: "Frontend that feels premium",
         desc: "Clean layouts, smooth animations, pixel-perfect responsiveness, and great UX for real users.",
-        Icon: FiStar
+        Icon: FiStar,
       },
       {
         title: "Backend that scales",
         desc: "Well-structured APIs, validation, auth, database design, and code that is easy to maintain.",
-        Icon: FiCpu
+        Icon: FiCpu,
       },
       {
         title: "Fast delivery, clear communication",
         desc: "Daily updates, organized tasks, and clean commits, so you always know what is happening.",
-        Icon: FiLayers
+        Icon: FiLayers,
       },
       {
         title: "Performance and SEO mindset",
         desc: "Optimized bundles, lazy loading, caching basics, and technical SEO friendly pages.",
-        Icon: FiZap
-      }
+        Icon: FiZap,
+      },
     ],
     []
   );
 
   const whatIDo = useMemo(
     () => [
-      { Icon: FiLayers, title: "Build UI", text: "Landing pages, dashboards, admin panels, components, animations." },
-      { Icon: FiShield, title: "Auth and Security", text: "JWT, role-based access, protected routes, best practices." },
-      { Icon: FiDatabase, title: "Database", text: "MongoDB schemas, indexes, data modeling, migrations planning." },
-      { Icon: FiLink2, title: "Integrations", text: "Payments, email, third-party APIs, file uploads, webhooks." }
+      {
+        Icon: FiLayers,
+        title: "Build UI",
+        text: "Landing pages, dashboards, admin panels, components, animations.",
+      },
+      {
+        Icon: FiShield,
+        title: "Auth and Security",
+        text: "JWT, role-based access, protected routes, best practices.",
+      },
+      {
+        Icon: FiDatabase,
+        title: "Database",
+        text: "MongoDB schemas, indexes, data modeling, migrations planning.",
+      },
+      {
+        Icon: FiLink2,
+        title: "Integrations",
+        text: "Payments, email, third-party APIs, file uploads, webhooks.",
+      },
     ],
     []
   );
@@ -102,15 +130,25 @@ const About = () => {
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="about"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
+      {/* Snowfall, above background layers, below content */}
+      <div className="absolute inset-0 z-[6] pointer-events-none">
+        <Snowfall
+          color="#82C3D9"
+          snowflakeCount={reduceMotion ? 0 : 120}
+          style={{ width: "100%", height: "100%" }}
+        />
+      </div>
 
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Background */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
+
+      <div className="absolute inset-0 z-[1] pointer-events-none">
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none">
         {orbs.map((o) => (
           <div
             key={o.id}
@@ -123,23 +161,24 @@ const About = () => {
               background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
               animationDelay: `${o.delay}s`,
               animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`
+              filter: `blur(${o.blur}px)`,
             }}
           />
         ))}
       </div>
 
       <div
-        className="absolute inset-0 opacity-[0.06]"
+        className="absolute inset-0 z-[2] opacity-[0.06]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
-          backgroundSize: "80px 80px"
+          backgroundSize: "80px 80px",
         }}
       />
 
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
+      <div className="absolute inset-0 z-[3] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
+      {/* Content */}
       <div className="relative z-10 w-full max-w-[1300px]">
         <div
           className={`text-center mb-12 sm:mb-16 transition-all duration-1000 transform ${
@@ -165,7 +204,8 @@ const About = () => {
           />
 
           <p className="text-slate-200/90 text-lg sm:text-xl mt-6 max-w-3xl mx-auto leading-relaxed">
-            I build modern, fast, and beautiful web applications, with clean code and a strong focus on user experience.
+            I build modern, fast, and beautiful web applications, with clean code and a strong focus on user
+            experience.
           </p>
         </div>
 
@@ -207,9 +247,10 @@ const About = () => {
                 </div>
 
                 <p className="text-slate-100/90 text-lg sm:text-xl leading-relaxed mt-7 bg-slate-800/25 p-7 rounded-2xl border border-slate-700/40 hover:border-cyan-400/35 transition-all duration-300">
-                  I build end-to-end web applications, from a beautiful frontend to a reliable backend. I focus on
-                  responsiveness, performance, and clean architecture, so your product is easy to scale and easy to
-                  maintain. If you want someone who cares about details and delivers on time, I can help.
+                  I build end-to-end web applications, from a beautiful frontend to a reliable backend. I
+                  focus on responsiveness, performance, and clean architecture, so your product is easy to
+                  scale and easy to maintain. If you want someone who cares about details and delivers on
+                  time, I can help.
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-7">
@@ -224,7 +265,7 @@ const About = () => {
                           ? undefined
                           : {
                               animationDelay: `${0.6 + index * 0.08}s`,
-                              animationFillMode: "forwards"
+                              animationFillMode: "forwards",
                             }
                       }
                     >
@@ -342,9 +383,12 @@ const About = () => {
             <div className="mt-8 relative bg-gradient-to-br from-cyan-500/12 to-blue-500/10 backdrop-blur-xl border border-cyan-400/25 rounded-3xl p-8 sm:p-9 overflow-hidden">
               <div
                 className={`${
-                  reduceMotion ? "hidden" : "absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer"
+                  reduceMotion
+                    ? "hidden"
+                    : "absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer"
                 }`}
               />
+
               <div className="relative">
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -363,7 +407,7 @@ const About = () => {
                   </div>
                   <div className="bg-slate-900/35 border border-slate-700/45 rounded-2xl p-5">
                     <div className="text-slate-200/80 text-base font-semibold">Timezone</div>
-                    <div className="text-white text-2xl font-extrabold mt-1"></div>
+                    <div className="text-white text-2xl font-extrabold mt-1">Asia/Karachi</div>
                   </div>
                 </div>
 
