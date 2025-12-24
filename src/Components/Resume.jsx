@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiBriefcase, FiBookOpen, FiClock, FiCheckCircle, FiCalendar, FiHome } from "react-icons/fi";
-import { LuPuzzle } from "react-icons/lu";
+import { FiBriefcase, FiBookOpen, FiCheckCircle, FiCalendar, FiHome } from "react-icons/fi";
 import Snowfall from "react-snowfall";
+
+import { tabs } from "../data/tabs.js";
+import { summaryCards } from "../data/summary.js";
+import { experienceData } from "../data/experience.js";
+import { educationData } from "../data/education.js";
 
 const makeRng = (seed0) => {
   let seed = seed0 >>> 0;
@@ -11,21 +15,149 @@ const makeRng = (seed0) => {
   };
 };
 
+const TabButton = React.memo(function TabButton({ tab, index, activeTab, goToTab, heavyEffectsEnabled }) {
+  const isActive = activeTab === index;
+
+  return (
+    <button
+      type="button"
+      onClick={() => goToTab(index)}
+      className={[
+        "relative w-full text-left rounded-2xl transition-all duration-300 group overflow-hidden",
+        "px-7 py-6",
+        isActive
+          ? "bg-cyan-400 text-black shadow-2xl shadow-cyan-400/20"
+          : "bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 text-slate-200 hover:border-cyan-400/40",
+        heavyEffectsEnabled ? "hover:scale-[1.02]" : ""
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full",
+          heavyEffectsEnabled ? "group-hover:translate-x-full transition-transform duration-1000" : ""
+        ].join(" ")}
+      />
+
+      <div className="relative flex items-center gap-4">
+        <span
+          className={[
+            "w-14 h-14 rounded-2xl flex items-center justify-center",
+            isActive ? "bg-black/10" : "bg-slate-800/40 border border-slate-700/40",
+            "transition-transform duration-300",
+            heavyEffectsEnabled ? "group-hover:scale-110" : ""
+          ].join(" ")}
+          aria-hidden="true"
+        >
+          <tab.Icon className={`w-8 h-8 ${isActive ? "text-black" : "text-cyan-200"}`} />
+        </span>
+
+        <div className="min-w-0">
+          <div className="text-2xl font-extrabold tracking-tight">{tab.name}</div>
+          <div className={`text-sm mt-1 ${isActive ? "text-black/70" : "text-slate-400"}`}>Tap to view details</div>
+        </div>
+      </div>
+
+      {isActive && (
+        <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <span className={`w-2.5 h-2.5 bg-black rounded-full ${heavyEffectsEnabled ? "animate-ping" : ""}`} />
+          <span className="w-2.5 h-2.5 bg-black rounded-full" />
+        </div>
+      )}
+    </button>
+  );
+});
+
+const TimelineItem = React.memo(function TimelineItem({ item, index, rightPill, heavyEffectsEnabled }) {
+  return (
+    <div
+      className={[
+        "relative pl-10 pb-10 border-l-2 transition-all duration-300 border-cyan-500/20 hover:border-cyan-400/45",
+        heavyEffectsEnabled ? "animate-slideInLeft" : ""
+      ].join(" ")}
+      style={heavyEffectsEnabled ? { animationDelay: `${index * 0.12}s` } : undefined}
+    >
+      <div
+        className={[
+          "absolute left-0 top-0 w-5 h-5 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full -translate-x-[11px] shadow-lg shadow-cyan-400/20",
+          heavyEffectsEnabled ? "animate-pulse-slow" : ""
+        ].join(" ")}
+      />
+
+      <div
+        className={[
+          "bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 rounded-3xl p-8 sm:p-9",
+          "transition-all duration-300 group",
+          heavyEffectsEnabled ? "hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10" : "",
+          "hover:border-cyan-400/35"
+        ].join(" ")}
+        style={{
+          contain: "layout paint style",
+          contentVisibility: "auto",
+          containIntrinsicSize: "1px 600px"
+        }}
+      >
+        <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
+          <div className="min-w-0">
+            <p className="text-cyan-200 text-base font-extrabold mb-3 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full border border-cyan-500/25">
+              <FiCalendar className="w-5 h-5" />
+              <span>{item.year}</span>
+            </p>
+
+            <h3 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 transition-colors duration-300 group-hover:text-cyan-200">
+              {item.title}
+            </h3>
+
+            <p className="text-slate-200/90 font-semibold text-2xl flex items-center gap-2">
+              <FiHome className="w-6 h-6 text-slate-300" />
+              <span className="break-words">{item.company}</span>
+            </p>
+          </div>
+
+          {rightPill ? (
+            <div className="mt-1">
+              <span className="px-5 py-2 bg-cyan-500/12 text-cyan-200 rounded-full text-base font-extrabold border border-cyan-400/25">
+                {rightPill}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        <p className="text-slate-200 leading-relaxed text-xl sm:text-2xl">{item.description}</p>
+
+        {"skills" in item && Array.isArray(item.skills) && (
+          <div className="flex flex-wrap gap-2.5 mt-6">
+            {item.skills.map((s) => (
+              <span
+                key={s}
+                className="px-5 py-2.5 bg-cyan-500/10 text-cyan-100 rounded-full text-base sm:text-lg font-bold border border-cyan-400/25 hover:bg-cyan-500/16 transition-colors duration-300"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const Resume = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const contentRef = useRef(null);
 
-  // motion + device gates
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
-  // in-view and scroll gates (same style as contact)
   const sectionRef = useRef(null);
   const [isSectionInView, setIsSectionInView] = useState(true);
-  const [isScrolling, setIsScrolling] = useState(false);
+
+  const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef(0);
+
+  const snowWrapRef = useRef(null);
+  const fxWrapRef = useRef(null);
 
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
@@ -76,20 +208,28 @@ const Resume = () => {
     const el = sectionRef.current;
     if (!el) return;
 
-    const obs = new IntersectionObserver(
-      ([entry]) => setIsSectionInView(entry.isIntersecting),
-      { threshold: 0.06 }
-    );
-
+    const obs = new IntersectionObserver(([entry]) => setIsSectionInView(entry.isIntersecting), { threshold: 0.06 });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
 
+  // KEY OPTIMIZATION: disable blur + heavy layers while scrolling, no React state updates
   useEffect(() => {
     const onScroll = () => {
-      setIsScrolling(true);
+      isScrollingRef.current = true;
+
+      if (sectionRef.current) sectionRef.current.classList.add("is-scrolling");
+      if (snowWrapRef.current) snowWrapRef.current.style.opacity = "0";
+      if (fxWrapRef.current) fxWrapRef.current.style.opacity = "0";
+
       window.clearTimeout(scrollTimerRef.current);
-      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+      scrollTimerRef.current = window.setTimeout(() => {
+        isScrollingRef.current = false;
+
+        if (sectionRef.current) sectionRef.current.classList.remove("is-scrolling");
+        if (snowWrapRef.current) snowWrapRef.current.style.opacity = "1";
+        if (fxWrapRef.current) fxWrapRef.current.style.opacity = "1";
+      }, 160);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -100,10 +240,9 @@ const Resume = () => {
   }, []);
 
   const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
-  const heavyEffectsEnabled = enableHeavyMotion && isSectionInView && !isScrolling;
+  const heavyEffectsEnabled = enableHeavyMotion && isSectionInView && !isScrollingRef.current;
 
-  // lighter counts, and fully off when not enabled
-  const orbCount = heavyEffectsEnabled ? 10 : 0;
+  const orbCount = heavyEffectsEnabled ? 6 : 0;
 
   const orbs = useMemo(() => {
     if (orbCount === 0) return [];
@@ -112,277 +251,91 @@ const Resume = () => {
 
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 260 + 160,
+      size: rng() * 180 + 140,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
-      delay: i * 0.55,
-      duration: rng() * 14 + 18,
-      blur: rng() * 10 + 18,
-      opacity: rng() * 0.05 + 0.04
+      delay: i * 0.6,
+      duration: rng() * 10 + 16,
+      blur: rng() * 6 + 14,
+      opacity: rng() * 0.04 + 0.035
     }));
   }, [orbCount]);
-
-  const showSnow = !reduceMotion && isSectionInView && !isScrolling;
-
-  const tabs = useMemo(
-    () => [
-      { name: "Experience", Icon: FiBriefcase },
-      { name: "Education", Icon: FiBookOpen }
-    ],
-    []
-  );
-
-  const experienceData = useMemo(
-    () => [
-      {
-        year: "Sep 2025 - present",
-        title: "FullStack Developer",
-        company: "Expert Texh",
-        description:
-          "Designed and developed responsive, user-friendly full stack applications, implementing scalable backend APIs, efficient data handling, and optimized frontend performance for a smooth user experience.",
-        skills: ["React", "Node.js", "Express", "PostgreSQL", "Next"]
-      },
-      {
-        year: "May 2024 - Dec 2024",
-        title: "Web Developer",
-        company: "&Build",
-        description: "Created responsive, user-friendly interfaces and optimized website performance.",
-        skills: ["React", "Node.js", "UI/UX"]
-      },
-      {
-        year: "2024",
-        title: "React Developer",
-        company: "Remote",
-        description: "Built dynamic, responsive web applications using React.js and related libraries.",
-        skills: ["React", "JavaScript", "API"]
-      }
-    ],
-    []
-  );
-
-  const educationData = useMemo(
-    () => [
-      {
-        year: "2020 - 2024",
-        title: "BSCS",
-        company: "Riphah International University",
-        description: "Expertise in Programming, Web development, and Problem-solving.",
-        grade: "3.5+ GPA"
-      },
-      {
-        year: "2018 - 2020",
-        title: "ICS",
-        company: "Punjab College Gojra",
-        description: "Gained knowledge of how computers work at the backend, and more.",
-        grade: "Distinction"
-      },
-      {
-        year: "2024",
-        title: "React Developer",
-        company: "Remote",
-        description: "Cleared all concepts of React in my learning journey.",
-        grade: "Certificate"
-      }
-    ],
-    []
-  );
-
-  const summaryCards = useMemo(
-    () => [
-      { label: "Experience", value: "2+ Years", Icon: FiClock },
-      { label: "Projects", value: "Multiple", Icon: LuPuzzle },
-      { label: "Availability", value: "Open", Icon: FiCheckCircle },
-      { label: "Timezone", value: "PKT", Icon: FiClock }
-    ],
-    []
-  );
 
   const goToTab = useCallback((idx) => {
     setActiveTab(idx);
     requestAnimationFrame(() => contentRef.current?.focus?.());
   }, []);
 
-  const TabButton = useCallback(
-    ({ tab, index }) => {
-      const isActive = activeTab === index;
-
-      return (
-        <button
-          type="button"
-          onClick={() => goToTab(index)}
-          className={[
-            "relative w-full text-left rounded-2xl transition-all duration-300 group overflow-hidden",
-            "px-7 py-6",
-            isActive
-              ? "bg-cyan-400 text-black shadow-2xl shadow-cyan-400/20"
-              : "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 text-slate-200 hover:border-cyan-400/40",
-            heavyEffectsEnabled ? "hover:scale-[1.02]" : ""
-          ].join(" ")}
-        >
-          <div
-            className={[
-              "absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full",
-              heavyEffectsEnabled ? "group-hover:translate-x-full transition-transform duration-1000" : ""
-            ].join(" ")}
-          />
-
-          <div className="relative flex items-center gap-4">
-            <span
-              className={[
-                "w-14 h-14 rounded-2xl flex items-center justify-center",
-                isActive ? "bg-black/10" : "bg-slate-800/40 border border-slate-700/40",
-                "transition-transform duration-300",
-                heavyEffectsEnabled ? "group-hover:scale-110" : ""
-              ].join(" ")}
-              aria-hidden="true"
-            >
-              <tab.Icon className={`w-8 h-8 ${isActive ? "text-black" : "text-cyan-200"}`} />
-            </span>
-
-            <div className="min-w-0">
-              <div className="text-2xl font-extrabold tracking-tight">{tab.name}</div>
-              <div className={`text-sm mt-1 ${isActive ? "text-black/70" : "text-slate-400"}`}>Tap to view details</div>
-            </div>
-          </div>
-
-          {isActive && (
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 bg-black rounded-full ${heavyEffectsEnabled ? "animate-ping" : ""}`} />
-              <span className="w-2.5 h-2.5 bg-black rounded-full" />
-            </div>
-          )}
-        </button>
-      );
-    },
-    [activeTab, heavyEffectsEnabled, goToTab]
-  );
-
-  const TimelineItem = useCallback(
-    ({ item, index, rightPill }) => {
-      return (
-        <div
-          className={[
-            "relative pl-10 pb-10 border-l-2 transition-all duration-300 border-cyan-500/20 hover:border-cyan-400/45",
-            heavyEffectsEnabled ? "animate-slideInLeft" : ""
-          ].join(" ")}
-          style={heavyEffectsEnabled ? { animationDelay: `${index * 0.12}s` } : undefined}
-        >
-          <div
-            className={[
-              "absolute left-0 top-0 w-5 h-5 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full -translate-x-[11px] shadow-lg shadow-cyan-400/20",
-              heavyEffectsEnabled ? "animate-pulse-slow" : ""
-            ].join(" ")}
-          />
-
-          <div
-            className={[
-              "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9",
-              "transition-all duration-300 group",
-              heavyEffectsEnabled ? "hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10" : "",
-              "hover:border-cyan-400/35"
-            ].join(" ")}
-          >
-            <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
-              <div className="min-w-0">
-                <p className="text-cyan-200 text-base font-extrabold mb-3 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 rounded-full border border-cyan-500/25">
-                  <FiCalendar className="w-5 h-5" />
-                  <span>{item.year}</span>
-                </p>
-
-                <h3 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-3 transition-colors duration-300 group-hover:text-cyan-200">
-                  {item.title}
-                </h3>
-
-                <p className="text-slate-200/90 font-semibold text-2xl flex items-center gap-2">
-                  <FiHome className="w-6 h-6 text-slate-300" />
-                  <span className="break-words">{item.company}</span>
-                </p>
-              </div>
-
-              {rightPill ? (
-                <div className="mt-1">
-                  <span className="px-5 py-2 bg-cyan-500/12 text-cyan-200 rounded-full text-base font-extrabold border border-cyan-400/25">
-                    {rightPill}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            <p className="text-slate-200 leading-relaxed text-xl sm:text-2xl">{item.description}</p>
-
-            {"skills" in item && Array.isArray(item.skills) && (
-              <div className="flex flex-wrap gap-2.5 mt-6">
-                {item.skills.map((s) => (
-                  <span
-                    key={s}
-                    className="px-5 py-2.5 bg-cyan-500/10 text-cyan-100 rounded-full text-base sm:text-lg font-bold border border-cyan-400/25 hover:bg-cyan-500/16 transition-colors duration-300"
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    },
-    [heavyEffectsEnabled]
-  );
+  const showSnow = !reduceMotion && isSectionInView && !isMobile;
 
   return (
     <section
       ref={sectionRef}
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="resume"
+      style={{
+        contain: "layout paint style",
+        contentVisibility: "auto",
+        containIntrinsicSize: "1px 1200px"
+      }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Snowfall, consistent with contact */}
+      {/* Snowfall, fades out while scrolling */}
       {showSnow && (
-        <div className="absolute inset-0 z-[6] pointer-events-none">
-          <Snowfall color="#82C3D9" snowflakeCount={80} style={{ width: "100%", height: "100%" }} />
+        <div
+          ref={snowWrapRef}
+          className="absolute inset-0 z-[6] pointer-events-none transition-opacity duration-200"
+          style={{ opacity: 1 }}
+        >
+          <Snowfall color="#82C3D9" snowflakeCount={30} style={{ width: "100%", height: "100%" }} />
         </div>
       )}
 
-      {/* Aurora blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow" : ""}`} />
-        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-700" : ""}`} />
-        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-300" : ""}`} />
+      {/* FX wrapper, fades out while scrolling */}
+      <div
+        ref={fxWrapRef}
+        className="absolute inset-0 pointer-events-none transition-opacity duration-200"
+        style={{ opacity: 1 }}
+      >
+        <div className="absolute inset-0 perf-aurora">
+          <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow" : ""}`} />
+          <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-700" : ""}`} />
+          <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-300" : ""}`} />
+        </div>
+
+        {heavyEffectsEnabled && (
+          <div className="absolute inset-0 overflow-hidden perf-orbs" style={{ contain: "paint" }}>
+            {orbs.map((o) => (
+              <div
+                key={o.id}
+                className="absolute rounded-full animate-float-smooth"
+                style={{
+                  width: `${o.size}px`,
+                  height: `${o.size}px`,
+                  left: `${o.left}%`,
+                  top: `${o.top}%`,
+                  opacity: o.opacity,
+                  background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+                  animationDelay: `${o.delay}s`,
+                  animationDuration: `${o.duration}s`,
+                  filter: `blur(${o.blur}px)`,
+                  willChange: "transform, opacity",
+                  transform: "translateZ(0)"
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Orbs */}
-      {heavyEffectsEnabled && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
-          {orbs.map((o) => (
-            <div
-              key={o.id}
-              className="absolute rounded-full animate-float-smooth"
-              style={{
-                width: `${o.size}px`,
-                height: `${o.size}px`,
-                left: `${o.left}%`,
-                top: `${o.top}%`,
-                opacity: o.opacity,
-                background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
-                animationDelay: `${o.delay}s`,
-                animationDuration: `${o.duration}s`,
-                filter: `blur(${o.blur}px)`,
-                willChange: "transform, opacity",
-                transform: "translateZ(0)"
-              }}
-            />
-          ))}
-        </div>
-      )}
-
       <div
-        className="absolute inset-0 opacity-[0.06]"
+        className="absolute inset-0 opacity-[0.05]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
-          backgroundSize: "80px 80px"
+          backgroundSize: "90px 90px"
         }}
       />
 
@@ -429,9 +382,20 @@ const Resume = () => {
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
             ].join(" ")}
           >
-            <div className="space-y-4">{tabs.map((t, idx) => <TabButton key={t.name} tab={t} index={idx} />)}</div>
+            <div className="space-y-4">
+              {tabs.map((t, idx) => (
+                <TabButton
+                  key={t.name}
+                  tab={t}
+                  index={idx}
+                  activeTab={activeTab}
+                  goToTab={goToTab}
+                  heavyEffectsEnabled={heavyEffectsEnabled}
+                />
+              ))}
+            </div>
 
-            <div className="relative bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-7 overflow-hidden shadow-2xl shadow-black/25">
+            <div className="relative bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 rounded-3xl p-7 overflow-hidden shadow-2xl shadow-black/25">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
               <h3 className="text-2xl font-extrabold text-white mb-6">Quick Summary</h3>
@@ -481,12 +445,16 @@ const Resume = () => {
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
             ].join(" ")}
           >
-            <div className="bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 min-h-[640px] shadow-2xl shadow-black/30">
+            <div className="bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 rounded-3xl p-8 sm:p-10 min-h-[640px] shadow-2xl shadow-black/30">
               <div ref={contentRef} tabIndex={-1} className="outline-none">
                 <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-br from-cyan-400 to-sky-500 shadow-cyan-400/20">
-                      {activeTab === 0 ? <FiBriefcase className="w-9 h-9 text-black" /> : <FiBookOpen className="w-9 h-9 text-black" />}
+                      {activeTab === 0 ? (
+                        <FiBriefcase className="w-9 h-9 text-black" />
+                      ) : (
+                        <FiBookOpen className="w-9 h-9 text-black" />
+                      )}
                     </div>
 
                     <div>
@@ -522,9 +490,10 @@ const Resume = () => {
                 </div>
 
                 <div
-                  className={`text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 ${
+                  className={[
+                    "text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10",
                     heavyEffectsEnabled ? "animate-fadeInUp" : ""
-                  }`}
+                  ].join(" ")}
                 >
                   {activeTab === 0
                     ? "I build modern web apps with strong UI, clean APIs, and reliable delivery. Here are my most recent roles."
@@ -534,7 +503,7 @@ const Resume = () => {
                 {activeTab === 0 && (
                   <div className="space-y-1">
                     {experienceData.map((item, idx) => (
-                      <TimelineItem key={`${item.title}-${idx}`} item={item} index={idx} />
+                      <TimelineItem key={`${item.title}-${idx}`} item={item} index={idx} heavyEffectsEnabled={heavyEffectsEnabled} />
                     ))}
                   </div>
                 )}
@@ -542,7 +511,13 @@ const Resume = () => {
                 {activeTab === 1 && (
                   <div className="space-y-1">
                     {educationData.map((item, idx) => (
-                      <TimelineItem key={`${item.title}-${idx}`} item={item} index={idx} rightPill={item.grade} />
+                      <TimelineItem
+                        key={`${item.title}-${idx}`}
+                        item={item}
+                        index={idx}
+                        rightPill={item.grade}
+                        heavyEffectsEnabled={heavyEffectsEnabled}
+                      />
                     ))}
                   </div>
                 )}
@@ -598,6 +573,17 @@ const Resume = () => {
 
         .delay-300 { animation-delay: 300ms; }
         .delay-700 { animation-delay: 700ms; }
+
+        /* PERF: disable expensive effects while scrolling */
+        :global(#resume.is-scrolling .perf-blur) {
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+        }
+
+        :global(#resume.is-scrolling .shadow-2xl),
+        :global(#resume.is-scrolling .shadow-lg) {
+          box-shadow: none !important;
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-float-smooth,
