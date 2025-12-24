@@ -15,27 +15,12 @@ import Skills from "./Components/Skills";
 import Contact from "./Components/Contact";
 import ProjectDetails from "./Components/ProjectDetails";
 
-function MainPage() {
-  return (
-    <>
-      <Home />
-      <About />
-      <Portfolio />
-      <Resume />
-      <Skills />
-      <Contact />
-    </>
-  );
-}
-
-const LayoutWithHeader = ({ children }) => {
-  return (
-    <>
-      <Header />
-      {children}
-    </>
-  );
-};
+const LayoutWithHeader = ({ children }) => (
+  <>
+    <Header />
+    {children}
+  </>
+);
 
 function App() {
   useEffect(() => {
@@ -50,7 +35,52 @@ function App() {
           path="/"
           element={
             <LayoutWithHeader>
-              <MainPage />
+              <Home />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/about"
+          element={
+            <LayoutWithHeader>
+              <About />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/portfolio"
+          element={
+            <LayoutWithHeader>
+              <Portfolio />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/resume"
+          element={
+            <LayoutWithHeader>
+              <Resume />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/skills"
+          element={
+            <LayoutWithHeader>
+              <Skills />
+            </LayoutWithHeader>
+          }
+        />
+
+        <Route
+          path="/contact"
+          element={
+            <LayoutWithHeader>
+              <Contact />
             </LayoutWithHeader>
           }
         />

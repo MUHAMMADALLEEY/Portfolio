@@ -25,6 +25,15 @@ const makeRng = (seed0) => {
 const About = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+
+  // In-view gating, stop heavy stuff when section is off screen
+  const sectionRef = useRef(null);
+  const [inView, setInView] = useState(true);
+
+  // Scroll gating, pause heavy visuals while scrolling
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimerRef = useRef(0);
+
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
   useEffect(() => {
@@ -44,32 +53,58 @@ const About = () => {
     return () => mq.removeListener(apply);
   }, []);
 
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.06 }
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => {
+        setIsScrolling(false);
+      }, 140);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const heavyEffectsEnabled = inView && !reduceMotion && !isScrolling;
+
+  // Reduce orb count + blur, biggest perf win
+  const orbCount = 7;
+
   const orbs = useMemo(() => {
     const rng = makeRng(seedRef.current + 123);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
-    return [...Array(12)].map((_, i) => ({
+    return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 420 + 180,
+      size: rng() * 300 + 160,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
-      delay: i * 0.65,
-      duration: rng() * 18 + 26,
-      blur: rng() * 30 + 70,
+      delay: i * 0.6,
+      duration: rng() * 14 + 18,
+      blur: rng() * 10 + 18,
+      opacity: rng() * 0.05 + 0.04,
     }));
   }, []);
 
   const skillTags = useMemo(
-    () => [
-      "React",
-      "Node.js",
-      "MongoDB",
-      "Tailwind",
-      "JavaScript",
-      "Express",
-      "PostgreSQL",
-      "REST APIs",
-    ],
+    () => ["React", "Node.js", "MongoDB", "Tailwind", "JavaScript", "Express", "PostgreSQL", "REST APIs"],
     []
   );
 
@@ -127,52 +162,64 @@ const About = () => {
 
   return (
     <section
+      ref={sectionRef}
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="about"
     >
-      {/* Snowfall, above background layers, below content */}
-      <div className="absolute inset-0 z-[6] pointer-events-none">
-        <Snowfall
-          color="#82C3D9"
-          snowflakeCount={reduceMotion ? 0 : 120}
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
+      {/* Snowfall, disable during scroll and when not in view */}
+      {inView && !isScrolling && !reduceMotion && (
+        <div className="absolute inset-0 z-[6] pointer-events-none">
+          <Snowfall
+            color="#82C3D9"
+            snowflakeCount={70}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
+      )}
 
       {/* Background */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      <div className="absolute inset-0 z-[1] pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl animate-aurora-slow" />
-        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl animate-aurora-slow delay-700" />
-        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl animate-aurora-slow delay-300" />
+      {/* Aurora blobs, keep but reduce blur */}
+      <div className="absolute inset-0 z-[1] pointer-events-none" style={{ contain: "paint" }}>
+        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-aurora-slow" />
+        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-2xl animate-aurora-slow delay-700" />
+        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-2xl animate-aurora-slow delay-300" />
       </div>
 
-      <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none">
-        {orbs.map((o) => (
-          <div
-            key={o.id}
-            className="absolute rounded-full opacity-10 animate-float-smooth"
-            style={{
-              width: `${o.size}px`,
-              height: `${o.size}px`,
-              left: `${o.left}%`,
-              top: `${o.top}%`,
-              background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
-              animationDelay: `${o.delay}s`,
-              animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`,
-            }}
-          />
-        ))}
-      </div>
+      {/* Orbs, only when enabled */}
+      {heavyEffectsEnabled && (
+        <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+          {orbs.map((o) => (
+            <div
+              key={o.id}
+              className="absolute rounded-full animate-float-smooth"
+              style={{
+                width: `${o.size}px`,
+                height: `${o.size}px`,
+                left: `${o.left}%`,
+                top: `${o.top}%`,
+                opacity: o.opacity,
+                background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+                animationDelay: `${o.delay}s`,
+                animationDuration: `${o.duration}s`,
+                filter: `blur(${o.blur}px)`,
+                willChange: "transform, opacity",
+                transform: "translateZ(0)",
+              }}
+            />
+          ))}
+        </div>
+      )}
 
+      {/* Grid */}
       <div
-        className="absolute inset-0 z-[2] opacity-[0.06]"
+        className="absolute inset-0 z-[2] opacity-[0.055]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
+          contain: "paint",
         }}
       />
 
@@ -215,7 +262,7 @@ const About = () => {
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
             }`}
           >
-            <div className="relative bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 overflow-hidden shadow-2xl shadow-black/30">
+            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 overflow-hidden shadow-2xl shadow-black/30">
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
@@ -298,7 +345,7 @@ const About = () => {
               {highlights.map((h, idx) => (
                 <div
                   key={h.title}
-                  className={`relative bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-7 hover:border-cyan-400/35 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-400/10 group overflow-hidden ${
+                  className={`relative bg-slate-900/40 sm:backdrop-blur-xl border border-slate-700/50 rounded-2xl p-7 hover:border-cyan-400/35 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-400/10 group overflow-hidden ${
                     reduceMotion ? "" : "animate-fadeInUp opacity-0"
                   }`}
                   style={
@@ -329,7 +376,7 @@ const About = () => {
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
             }`}
           >
-            <div className="relative bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9 shadow-2xl shadow-black/30 overflow-hidden">
+            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9 shadow-2xl shadow-black/30 overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
               <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
@@ -380,14 +427,10 @@ const About = () => {
               </div>
             </div>
 
-            <div className="mt-8 relative bg-gradient-to-br from-cyan-500/12 to-blue-500/10 backdrop-blur-xl border border-cyan-400/25 rounded-3xl p-8 sm:p-9 overflow-hidden">
-              <div
-                className={`${
-                  reduceMotion
-                    ? "hidden"
-                    : "absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer"
-                }`}
-              />
+            <div className="mt-8 relative bg-gradient-to-br from-cyan-500/12 to-blue-500/10 sm:backdrop-blur-xl border border-cyan-400/25 rounded-3xl p-8 sm:p-9 overflow-hidden">
+              {!reduceMotion && (
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer" />
+              )}
 
               <div className="relative">
                 <div className="flex items-center justify-between gap-4">
@@ -434,13 +477,13 @@ const About = () => {
             transform: translate3d(0, 0, 0);
           }
           25% {
-            transform: translate3d(-12px, -12px, 0);
+            transform: translate3d(-10px, -10px, 0);
           }
           50% {
-            transform: translate3d(12px, -8px, 0);
+            transform: translate3d(10px, -8px, 0);
           }
           75% {
-            transform: translate3d(-8px, 12px, 0);
+            transform: translate3d(-8px, 10px, 0);
           }
         }
 
@@ -451,8 +494,8 @@ const About = () => {
             opacity: 0.65;
           }
           50% {
-            transform: translate3d(18px, -14px, 0) scale(1.03);
-            opacity: 0.9;
+            transform: translate3d(16px, -12px, 0) scale(1.02);
+            opacity: 0.88;
           }
         }
 
@@ -520,7 +563,7 @@ const About = () => {
         }
 
         .animate-shimmer {
-          animation: shimmer 2.5s infinite;
+          animation: shimmer 2.5s linear infinite;
           will-change: transform;
         }
 

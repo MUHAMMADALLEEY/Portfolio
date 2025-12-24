@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiBriefcase, FiBookOpen, FiClock, FiLayers, FiCheckCircle, FiArrowRight, FiCalendar, FiHome } from "react-icons/fi";
+import { FiBriefcase, FiBookOpen, FiClock, FiCheckCircle, FiCalendar, FiHome } from "react-icons/fi";
 import { LuPuzzle } from "react-icons/lu";
 import Snowfall from "react-snowfall";
 
@@ -16,15 +16,20 @@ const Resume = () => {
   const [isVisible, setIsVisible] = useState(false);
   const contentRef = useRef(null);
 
+  // motion + device gates
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
+  // in-view and scroll gates (same style as contact)
+  const sectionRef = useRef(null);
+  const [isSectionInView, setIsSectionInView] = useState(true);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimerRef = useRef(0);
+
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  useEffect(() => setIsVisible(true), []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -67,25 +72,58 @@ const Resume = () => {
     };
   }, []);
 
-  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
 
-  const orbCount = enableHeavyMotion ? 18 : 8;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsSectionInView(entry.isIntersecting),
+      { threshold: 0.06 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+  const heavyEffectsEnabled = enableHeavyMotion && isSectionInView && !isScrolling;
+
+  // lighter counts, and fully off when not enabled
+  const orbCount = heavyEffectsEnabled ? 10 : 0;
 
   const orbs = useMemo(() => {
+    if (orbCount === 0) return [];
     const rng = makeRng(seedRef.current + 777);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
 
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 360 + 180,
+      size: rng() * 260 + 160,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
       delay: i * 0.55,
-      duration: rng() * 18 + 26,
-      blur: rng() * 30 + 70
+      duration: rng() * 14 + 18,
+      blur: rng() * 10 + 18,
+      opacity: rng() * 0.05 + 0.04
     }));
   }, [orbCount]);
+
+  const showSnow = !reduceMotion && isSectionInView && !isScrolling;
 
   const tabs = useMemo(
     () => [
@@ -101,10 +139,11 @@ const Resume = () => {
         year: "Sep 2025 - present",
         title: "FullStack Developer",
         company: "Expert Texh",
-        description: "Designed and developed responsive, user-friendly full stack applications, implementing scalable backend APIs, efficient data handling, and optimized frontend performance for a smooth user experience.",
-        skills: ["React", "Node.js", "Express", "PostgreSQL", "Next" ]
+        description:
+          "Designed and developed responsive, user-friendly full stack applications, implementing scalable backend APIs, efficient data handling, and optimized frontend performance for a smooth user experience.",
+        skills: ["React", "Node.js", "Express", "PostgreSQL", "Next"]
       },
-        {
+      {
         year: "May 2024 - Dec 2024",
         title: "Web Developer",
         company: "&Build",
@@ -117,7 +156,7 @@ const Resume = () => {
         company: "Remote",
         description: "Built dynamic, responsive web applications using React.js and related libraries.",
         skills: ["React", "JavaScript", "API"]
-      },
+      }
     ],
     []
   );
@@ -154,7 +193,7 @@ const Resume = () => {
       { label: "Experience", value: "2+ Years", Icon: FiClock },
       { label: "Projects", value: "Multiple", Icon: LuPuzzle },
       { label: "Availability", value: "Open", Icon: FiCheckCircle },
-      { label: "Timezone", value: "", Icon: FiClock }
+      { label: "Timezone", value: "PKT", Icon: FiClock }
     ],
     []
   );
@@ -178,13 +217,13 @@ const Resume = () => {
             isActive
               ? "bg-cyan-400 text-black shadow-2xl shadow-cyan-400/20"
               : "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 text-slate-200 hover:border-cyan-400/40",
-            enableHeavyMotion ? "hover:scale-[1.02]" : ""
+            heavyEffectsEnabled ? "hover:scale-[1.02]" : ""
           ].join(" ")}
         >
           <div
             className={[
               "absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full",
-              enableHeavyMotion ? "group-hover:translate-x-full transition-transform duration-1000" : ""
+              heavyEffectsEnabled ? "group-hover:translate-x-full transition-transform duration-1000" : ""
             ].join(" ")}
           />
 
@@ -194,7 +233,7 @@ const Resume = () => {
                 "w-14 h-14 rounded-2xl flex items-center justify-center",
                 isActive ? "bg-black/10" : "bg-slate-800/40 border border-slate-700/40",
                 "transition-transform duration-300",
-                enableHeavyMotion ? "group-hover:scale-110" : ""
+                heavyEffectsEnabled ? "group-hover:scale-110" : ""
               ].join(" ")}
               aria-hidden="true"
             >
@@ -209,14 +248,14 @@ const Resume = () => {
 
           {isActive && (
             <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 bg-black rounded-full ${enableHeavyMotion ? "animate-ping" : ""}`} />
+              <span className={`w-2.5 h-2.5 bg-black rounded-full ${heavyEffectsEnabled ? "animate-ping" : ""}`} />
               <span className="w-2.5 h-2.5 bg-black rounded-full" />
             </div>
           )}
         </button>
       );
     },
-    [activeTab, enableHeavyMotion, goToTab]
+    [activeTab, heavyEffectsEnabled, goToTab]
   );
 
   const TimelineItem = useCallback(
@@ -225,16 +264,14 @@ const Resume = () => {
         <div
           className={[
             "relative pl-10 pb-10 border-l-2 transition-all duration-300 border-cyan-500/20 hover:border-cyan-400/45",
-            enableHeavyMotion ? "animate-slideInLeft" : ""
+            heavyEffectsEnabled ? "animate-slideInLeft" : ""
           ].join(" ")}
-          style={enableHeavyMotion ? { animationDelay: `${index * 0.12}s` } : undefined}
+          style={heavyEffectsEnabled ? { animationDelay: `${index * 0.12}s` } : undefined}
         >
-   
-
           <div
             className={[
               "absolute left-0 top-0 w-5 h-5 bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full -translate-x-[11px] shadow-lg shadow-cyan-400/20",
-              enableHeavyMotion ? "animate-pulse-slow" : ""
+              heavyEffectsEnabled ? "animate-pulse-slow" : ""
             ].join(" ")}
           />
 
@@ -242,7 +279,7 @@ const Resume = () => {
             className={[
               "bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9",
               "transition-all duration-300 group",
-              enableHeavyMotion ? "hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10" : "",
+              heavyEffectsEnabled ? "hover:-translate-y-1 hover:shadow-2xl hover:shadow-cyan-400/10" : "",
               "hover:border-cyan-400/35"
             ].join(" ")}
           >
@@ -290,52 +327,55 @@ const Resume = () => {
         </div>
       );
     },
-    [enableHeavyMotion]
+    [heavyEffectsEnabled]
   );
 
   return (
     <section
+      ref={sectionRef}
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="resume"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
+      {/* Snowfall, consistent with contact */}
+      {showSnow && (
+        <div className="absolute inset-0 z-[6] pointer-events-none">
+          <Snowfall color="#82C3D9" snowflakeCount={80} style={{ width: "100%", height: "100%" }} />
+        </div>
+      )}
+
+      {/* Aurora blobs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div
-          className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow" : ""
-          }`}
-        />
-        <div
-          className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow delay-700" : ""
-          }`}
-        />
-        <div
-          className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow delay-300" : ""
-          }`}
-        />
+        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow" : ""}`} />
+        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-700" : ""}`} />
+        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {orbs.map((o) => (
-          <div
-            key={o.id}
-            className={`absolute rounded-full opacity-10 ${enableHeavyMotion ? "animate-float-smooth" : ""}`}
-            style={{
-              width: `${o.size}px`,
-              height: `${o.size}px`,
-              left: `${o.left}%`,
-              top: `${o.top}%`,
-              background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
-              animationDelay: `${o.delay}s`,
-              animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`
-            }}
-          />
-        ))}
-      </div>
+      {/* Orbs */}
+      {heavyEffectsEnabled && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+          {orbs.map((o) => (
+            <div
+              key={o.id}
+              className="absolute rounded-full animate-float-smooth"
+              style={{
+                width: `${o.size}px`,
+                height: `${o.size}px`,
+                left: `${o.left}%`,
+                top: `${o.top}%`,
+                opacity: o.opacity,
+                background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+                animationDelay: `${o.delay}s`,
+                animationDuration: `${o.duration}s`,
+                filter: `blur(${o.blur}px)`,
+                willChange: "transform, opacity",
+                transform: "translateZ(0)"
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div
         className="absolute inset-0 opacity-[0.06]"
@@ -349,27 +389,19 @@ const Resume = () => {
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative z-10 w-full max-w-[1300px]">
-               <div className="absolute inset-0 z-[6] pointer-events-none">
-  <Snowfall
-    color="#82C3D9"
-    snowflakeCount={reduceMotion ? 0 : 120}
-    style={{ width: "100%", height: "100%" }}
-  />
-</div>
         <div
           className={[
             "text-center mb-14 sm:mb-20 transition-all duration-1000 transform",
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
           ].join(" ")}
         >
-          
           <div className="inline-block relative">
             <h2 className="text-5xl sm:text-6xl lg:text-8xl font-extrabold mb-4 tracking-tight text-white">
               Resume{" "}
               <span
                 className={[
                   "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
-                  enableHeavyMotion ? "animate-gradient" : ""
+                  heavyEffectsEnabled ? "animate-gradient" : ""
                 ].join(" ")}
                 style={{ backgroundSize: "200% auto" }}
               >
@@ -380,7 +412,7 @@ const Resume = () => {
             <div
               className={[
                 "absolute -bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full",
-                enableHeavyMotion ? "animate-pulse-slow" : ""
+                heavyEffectsEnabled ? "animate-pulse-slow" : ""
               ].join(" ")}
             />
           </div>
@@ -423,7 +455,7 @@ const Resume = () => {
                 <a
                   href="#contact"
                   className={`text-center px-4 py-3 rounded-xl bg-cyan-400 text-black font-extrabold text-lg ${
-                    enableHeavyMotion ? "hover:scale-[1.02] transition-transform duration-300" : ""
+                    heavyEffectsEnabled ? "hover:scale-[1.02] transition-transform duration-300" : ""
                   }`}
                 >
                   Contact
@@ -433,7 +465,7 @@ const Resume = () => {
                   href="#portfolio"
                   className={[
                     "text-center px-4 py-3 rounded-xl bg-slate-900/40 border border-slate-700/60 text-slate-100 font-extrabold text-lg",
-                    enableHeavyMotion ? "hover:border-cyan-400/40 hover:scale-[1.02]" : "hover:border-cyan-400/40",
+                    heavyEffectsEnabled ? "hover:border-cyan-400/40 hover:scale-[1.02]" : "hover:border-cyan-400/40",
                     "transition-all duration-300"
                   ].join(" ")}
                 >
@@ -454,11 +486,7 @@ const Resume = () => {
                 <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-br from-cyan-400 to-sky-500 shadow-cyan-400/20">
-                      {activeTab === 0 ? (
-                        <FiBriefcase className="w-9 h-9 text-black" />
-                      ) : (
-                        <FiBookOpen className="w-9 h-9 text-black" />
-                      )}
+                      {activeTab === 0 ? <FiBriefcase className="w-9 h-9 text-black" /> : <FiBookOpen className="w-9 h-9 text-black" />}
                     </div>
 
                     <div>
@@ -495,7 +523,7 @@ const Resume = () => {
 
                 <div
                   className={`text-slate-200 text-xl sm:text-2xl leading-relaxed bg-slate-800/30 rounded-2xl p-7 border border-slate-700/30 mb-10 ${
-                    enableHeavyMotion ? "animate-fadeInUp" : ""
+                    heavyEffectsEnabled ? "animate-fadeInUp" : ""
                   }`}
                 >
                   {activeTab === 0
@@ -527,109 +555,49 @@ const Resume = () => {
       <style jsx>{`
         @keyframes float-smooth {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          25% {
-            transform: translate3d(-12px, -12px, 0);
-          }
-          50% {
-            transform: translate3d(12px, -8px, 0);
-          }
-          75% {
-            transform: translate3d(-8px, 12px, 0);
-          }
+          100% { transform: translate3d(0, 0, 0); }
+          25% { transform: translate3d(-10px, -10px, 0); }
+          50% { transform: translate3d(10px, -8px, 0); }
+          75% { transform: translate3d(-8px, 10px, 0); }
         }
 
         @keyframes aurora-slow {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-            opacity: 0.65;
-          }
-          50% {
-            transform: translate3d(18px, -14px, 0) scale(1.03);
-            opacity: 0.9;
-          }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+          50% { transform: translate3d(16px, -12px, 0) scale(1.02); opacity: 0.88; }
         }
 
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(26px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(26px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-26px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-26px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes gradient {
           0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
+          100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
 
         @keyframes pulse-slow {
           0%,
-          100% {
-            opacity: 0.55;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.9;
-            transform: scale(1.06);
-          }
+          100% { opacity: 0.55; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.06); }
         }
 
-        .animate-float-smooth {
-          animation: float-smooth ease-in-out infinite;
-          will-change: transform;
-        }
+        .animate-float-smooth { animation: float-smooth ease-in-out infinite; will-change: transform; }
+        .animate-aurora-slow { animation: aurora-slow ease-in-out infinite; animation-duration: 18s; will-change: transform, opacity; }
+        .animate-fadeInUp { animation: fadeInUp 0.85s ease-out both; }
+        .animate-slideInLeft { animation: slideInLeft 0.65s ease-out both; }
+        .animate-gradient { animation: gradient 4s ease infinite; }
+        .animate-pulse-slow { animation: pulse-slow 4.5s ease-in-out infinite; }
 
-        .animate-aurora-slow {
-          animation: aurora-slow ease-in-out infinite;
-          animation-duration: 18s;
-          will-change: transform, opacity;
-        }
-
-        .animate-fadeInUp {
-          animation: fadeInUp 0.85s ease-out both;
-        }
-
-        .animate-slideInLeft {
-          animation: slideInLeft 0.65s ease-out both;
-        }
-
-        .animate-gradient {
-          animation: gradient 4s ease infinite;
-        }
-
-        .animate-pulse-slow {
-          animation: pulse-slow 4.5s ease-in-out infinite;
-        }
-
-        .delay-300 {
-          animation-delay: 300ms;
-        }
-        .delay-700 {
-          animation-delay: 700ms;
-        }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-700 { animation-delay: 700ms; }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-float-smooth,
@@ -637,9 +605,7 @@ const Resume = () => {
           .animate-fadeInUp,
           .animate-slideInLeft,
           .animate-gradient,
-          .animate-pulse-slow {
-            animation: none !important;
-          }
+          .animate-pulse-slow { animation: none !important; }
         }
       `}</style>
     </section>

@@ -21,10 +21,17 @@ const Portfolio = () => {
   const [inView, setInView] = useState(false);
   const sectionRef = useRef(null);
 
-  // reduce motion + coarse pointer (touch)
+  // reduced motion + device characteristics
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  // in-view gating for heavy effects
+  const [isSectionInView, setIsSectionInView] = useState(true);
+
+  // pause heavy effects while scrolling
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimerRef = useRef(0);
 
   // stable seed for random backgrounds
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
@@ -70,6 +77,7 @@ const Portfolio = () => {
     };
   }, []);
 
+  // reveal animation once
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -78,7 +86,7 @@ const Portfolio = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           setInView(true);
-          obs.unobserve(el); // stop observing after first reveal
+          obs.unobserve(el);
         }
       },
       { threshold: 0.12 }
@@ -88,15 +96,38 @@ const Portfolio = () => {
     return () => obs.disconnect();
   }, []);
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(projects.length / PER_PAGE)),
-    []
-  );
+  // section in-view gating for heavy effects (separate observer, keeps working after reveal)
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsSectionInView(entry.isIntersecting),
+      { threshold: 0.06 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // scrolling gating
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(projects.length / PER_PAGE)), []);
   const start = useMemo(() => (page - 1) * PER_PAGE, [page]);
-  const currentProjects = useMemo(
-    () => projects.slice(start, start + PER_PAGE),
-    [start]
-  );
+  const currentProjects = useMemo(() => projects.slice(start, start + PER_PAGE), [start]);
   const showPagination = projects.length > PER_PAGE;
 
   const goTo = useCallback(
@@ -104,7 +135,6 @@ const Portfolio = () => {
       const safe = Math.min(totalPages, Math.max(1, p));
       setPage(safe);
 
-      // optional: scroll back to portfolio top when switching page
       const el = sectionRef.current;
       if (el) {
         el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -113,25 +143,32 @@ const Portfolio = () => {
     [totalPages, reduceMotion]
   );
 
-  // reduce background work on mobile/touch and on reduced motion
+  // motion gating
   const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
-  const orbCount = enableHeavyMotion ? 12 : 6;
+  const heavyEffectsEnabled = enableHeavyMotion && isSectionInView && !isScrolling;
 
-  // Stable, seeded orbs, less count on mobile/touch
+  const orbCount = heavyEffectsEnabled ? 7 : 0;
+
+  // Stable, seeded orbs (lower count, lower blur)
   const orbs = useMemo(() => {
+    if (orbCount === 0) return [];
     const rng = makeRng(seedRef.current + 999);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
+
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 380 + 180,
+      size: rng() * 260 + 160,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
-      delay: i * 0.65,
-      duration: rng() * 18 + 26,
-      blur: rng() * 30 + 70
+      delay: i * 0.55,
+      duration: rng() * 14 + 18,
+      blur: rng() * 10 + 18,
+      opacity: rng() * 0.05 + 0.04,
     }));
   }, [orbCount]);
+
+  const showSnow = !reduceMotion && isSectionInView && !isScrolling;
 
   return (
     <section
@@ -139,55 +176,68 @@ const Portfolio = () => {
       className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="portfolio"
     >
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Aurora, disable animation on mobile/touch and reduced motion */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Snowfall, keep it once for the whole section, not inside the grid */}
+      {showSnow && (
+        <div className="absolute inset-0 z-[6] pointer-events-none">
+          <Snowfall color="#82C3D9" snowflakeCount={80} style={{ width: "100%", height: "100%" }} />
+        </div>
+      )}
+
+      {/* Aurora */}
+      <div className="absolute inset-0 pointer-events-none" style={{ contain: "paint" }}>
         <div
-          className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow" : ""
+          className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-2xl ${
+            heavyEffectsEnabled ? "animate-aurora-slow" : ""
           }`}
         />
         <div
-          className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow delay-700" : ""
+          className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-2xl ${
+            heavyEffectsEnabled ? "animate-aurora-slow delay-700" : ""
           }`}
         />
         <div
-          className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${
-            enableHeavyMotion ? "animate-aurora-slow delay-300" : ""
+          className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-2xl ${
+            heavyEffectsEnabled ? "animate-aurora-slow delay-300" : ""
           }`}
         />
       </div>
 
-      {/* Orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {orbs.map((o) => (
-          <div
-            key={o.id}
-            className={`absolute rounded-full opacity-10 ${
-              enableHeavyMotion ? "animate-float-smooth" : ""
-            }`}
-            style={{
-              width: `${o.size}px`,
-              height: `${o.size}px`,
-              left: `${o.left}%`,
-              top: `${o.top}%`,
-              background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
-              animationDelay: `${o.delay}s`,
-              animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`
-            }}
-          />
-        ))}
-      </div>
+      {/* Orbs, only when enabled */}
+      {heavyEffectsEnabled && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+          {orbs.map((o) => (
+            <div
+              key={o.id}
+              className="absolute rounded-full animate-float-smooth"
+              style={{
+                width: `${o.size}px`,
+                height: `${o.size}px`,
+                left: `${o.left}%`,
+                top: `${o.top}%`,
+                opacity: o.opacity,
+                background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+                animationDelay: `${o.delay}s`,
+                animationDuration: `${o.duration}s`,
+                filter: `blur(${o.blur}px)`,
+                willChange: "transform, opacity",
+                transform: "translateZ(0)",
+              }}
+            />
+          ))}
+        </div>
+      )}
 
+      {/* Grid overlay */}
       <div
-        className="absolute inset-0 opacity-[0.06]"
+        className="absolute inset-0 opacity-[0.055]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
-          backgroundSize: "80px 80px"
+          backgroundSize: "80px 80px",
+          contain: "paint",
         }}
       />
 
@@ -198,7 +248,7 @@ const Portfolio = () => {
         <div
           className={[
             "text-center mb-12 sm:mb-16 transition-all duration-1000 transform",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
+            inView ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10",
           ].join(" ")}
         >
           <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold inline-block tracking-tight text-white">
@@ -206,7 +256,7 @@ const Portfolio = () => {
             <span
               className={[
                 "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
-                enableHeavyMotion ? "animate-gradient" : ""
+                heavyEffectsEnabled ? "animate-gradient" : "",
               ].join(" ")}
               style={{ backgroundSize: "200% auto" }}
             >
@@ -216,7 +266,7 @@ const Portfolio = () => {
 
           <div
             className={`h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full ${
-              enableHeavyMotion ? "animate-pulse-slow" : ""
+              heavyEffectsEnabled ? "animate-pulse-slow" : ""
             }`}
           />
 
@@ -227,14 +277,6 @@ const Portfolio = () => {
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-          <div className="absolute inset-0 z-[6] pointer-events-none">
-  <Snowfall
-    color="#82C3D9"
-    snowflakeCount={reduceMotion ? 0 : 120}
-    style={{ width: "100%", height: "100%" }}
-  />
-</div>
-
           {currentProjects.map((project, localIndex) => {
             const globalIndex = start + localIndex;
 
@@ -242,8 +284,8 @@ const Portfolio = () => {
               <article
                 key={`${project.slug}-${globalIndex}`}
                 className={[
-                  "group relative bg-slate-900/45 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-700/50 hover:border-cyan-400/40 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-400/10 transform hover:-translate-y-2",
-                  inView ? "animate-revealUp" : "opacity-0 translate-y-6"
+                  "group relative bg-slate-900/45 sm:backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-700/50 hover:border-cyan-400/40 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-400/10 transform hover:-translate-y-2",
+                  inView ? "animate-revealUp" : "opacity-0 translate-y-6",
                 ].join(" ")}
                 style={inView ? { animationDelay: `${localIndex * 0.12}s` } : undefined}
               >
@@ -286,12 +328,7 @@ const Portfolio = () => {
                     >
                       View Project
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 7l5 5m0 0l-5 5m5-5H6"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </Link>
                   </div>
@@ -308,13 +345,9 @@ const Portfolio = () => {
                     </span>
                   </div>
 
-                  <p className="text-slate-200/90 text-base leading-relaxed mt-3">
-                    {project.shortDescription}
-                  </p>
+                  <p className="text-slate-200/90 text-base leading-relaxed mt-3">{project.shortDescription}</p>
 
                   <div className="mt-6 flex items-center justify-between">
-                   
-
                     <Link
                       to={`/projects/${project.slug}`}
                       className="group/btn inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 font-extrabold transition-all duration-300"
@@ -326,12 +359,7 @@ const Portfolio = () => {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 7l5 5m0 0l-5 5m5-5H6"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </Link>
                   </div>
@@ -396,10 +424,8 @@ const Portfolio = () => {
 
             <div className="text-slate-300/80 text-sm font-semibold">
               Showing <span className="text-slate-100">{start + 1}</span> to{" "}
-              <span className="text-slate-100">
-                {Math.min(start + PER_PAGE, projects.length)}
-              </span>{" "}
-              of <span className="text-slate-100">{projects.length}</span>
+              <span className="text-slate-100">{Math.min(start + PER_PAGE, projects.length)}</span> of{" "}
+              <span className="text-slate-100">{projects.length}</span>
             </div>
           </div>
         )}
@@ -408,61 +434,33 @@ const Portfolio = () => {
       <style>{`
         @keyframes float-smooth {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          25% {
-            transform: translate3d(-12px, -12px, 0);
-          }
-          50% {
-            transform: translate3d(12px, -8px, 0);
-          }
-          75% {
-            transform: translate3d(-8px, 12px, 0);
-          }
+          100% { transform: translate3d(0, 0, 0); }
+          25% { transform: translate3d(-10px, -10px, 0); }
+          50% { transform: translate3d(10px, -8px, 0); }
+          75% { transform: translate3d(-8px, 10px, 0); }
         }
 
         @keyframes aurora-slow {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-            opacity: 0.65;
-          }
-          50% {
-            transform: translate3d(18px, -14px, 0) scale(1.03);
-            opacity: 0.9;
-          }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+          50% { transform: translate3d(16px, -12px, 0) scale(1.02); opacity: 0.88; }
         }
 
         @keyframes gradient {
           0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
+          100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
 
         @keyframes pulse-slow {
           0%,
-          100% {
-            opacity: 0.35;
-          }
-          50% {
-            opacity: 0.55;
-          }
+          100% { opacity: 0.35; }
+          50% { opacity: 0.55; }
         }
 
         @keyframes revealUp {
-          from {
-            opacity: 0;
-            transform: translateY(22px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(22px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .animate-float-smooth {
@@ -476,34 +474,19 @@ const Portfolio = () => {
           will-change: transform, opacity;
         }
 
-        .animate-gradient {
-          animation: gradient 4s ease infinite;
-        }
+        .animate-gradient { animation: gradient 4s ease infinite; }
+        .animate-pulse-slow { animation: pulse-slow 4.5s ease-in-out infinite; }
+        .animate-revealUp { animation: revealUp 0.9s ease-out forwards; }
 
-        .animate-pulse-slow {
-          animation: pulse-slow 4.5s ease-in-out infinite;
-        }
-
-        .animate-revealUp {
-          animation: revealUp 0.9s ease-out forwards;
-        }
-
-        .delay-300 {
-          animation-delay: 300ms;
-        }
-
-        .delay-700 {
-          animation-delay: 700ms;
-        }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-700 { animation-delay: 700ms; }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-float-smooth,
           .animate-aurora-slow,
           .animate-gradient,
           .animate-pulse-slow,
-          .animate-revealUp {
-            animation: none !important;
-          }
+          .animate-revealUp { animation: none !important; }
         }
       `}</style>
     </section>

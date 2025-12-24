@@ -10,10 +10,7 @@ import {
   FiBox,
   FiFolder,
   FiSmile,
-  FiTarget,
-  FiArrowRight,
-  FiChevronLeft,
-  FiChevronRight
+  FiTarget
 } from "react-icons/fi";
 import Snowfall from "react-snowfall";
 
@@ -25,24 +22,20 @@ const makeRng = (seed0) => {
   };
 };
 
-const getInitials = (name = "") => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "U";
-  const first = parts[0]?.[0] || "";
-  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : "";
-  return (first + last).toUpperCase();
-};
-
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-
 const Skills = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [animateBars, setAnimateBars] = useState(false);
   const sectionRef = useRef(null);
 
+  // motion + device gates
   const [reduceMotion, setReduceMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+
+  // in-view and scroll gates
+  const [isSectionInView, setIsSectionInView] = useState(true);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimerRef = useRef(0);
 
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
@@ -104,23 +97,53 @@ const Skills = () => {
     };
   }, []);
 
-  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
 
-  const orbCount = enableHeavyMotion ? 18 : 8;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsSectionInView(entry.isIntersecting),
+      { threshold: 0.06 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
+
+  const enableHeavyMotion = !reduceMotion && !isMobile && !isCoarsePointer;
+  const heavyEffectsEnabled = enableHeavyMotion && isSectionInView && !isScrolling;
+
+  const orbCount = heavyEffectsEnabled ? 10 : 0;
 
   const orbs = useMemo(() => {
+    if (orbCount === 0) return [];
     const rng = makeRng(seedRef.current + 333);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
 
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 420 + 180,
+      size: rng() * 260 + 160,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
       delay: i * 0.55,
-      duration: rng() * 18 + 26,
-      blur: rng() * 35 + 75
+      duration: rng() * 14 + 18,
+      blur: rng() * 10 + 18,
+      opacity: rng() * 0.05 + 0.04
     }));
   }, [orbCount]);
 
@@ -200,7 +223,7 @@ const Skills = () => {
               }}
             >
               <div className={`absolute inset-0 bg-gradient-to-r ${skill.color}`} />
-              {enableHeavyMotion && (
+              {heavyEffectsEnabled && (
                 <>
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white/95 rounded-full shadow-lg animate-pulse-fast" />
@@ -211,17 +234,17 @@ const Skills = () => {
         </div>
       );
     },
-    [animateBars, enableHeavyMotion]
+    [animateBars, heavyEffectsEnabled]
   );
 
   const SkillCard = useCallback(
     ({ title, subtitle, accent = "cyan", iconBg, iconSvg, children }) => {
       const borderHover =
         accent === "cyan"
-          ? enableHeavyMotion
+          ? heavyEffectsEnabled
             ? "hover:border-cyan-400/35 hover:shadow-cyan-400/10"
             : "hover:border-cyan-400/35"
-          : enableHeavyMotion
+          : heavyEffectsEnabled
             ? "hover:border-purple-500/40 hover:shadow-purple-500/15"
             : "hover:border-purple-500/40";
 
@@ -236,9 +259,7 @@ const Skills = () => {
             borderHover
           ].join(" ")}
         >
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${glowBg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`}
-          />
+          <div className={`absolute inset-0 bg-gradient-to-br ${glowBg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`} />
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
           <div className="relative">
@@ -246,7 +267,7 @@ const Skills = () => {
               <div
                 className={[
                   `w-16 h-16 rounded-2xl ${iconBg} flex items-center justify-center shadow-xl shrink-0`,
-                  enableHeavyMotion ? "group-hover:scale-110 transition-transform duration-500" : ""
+                  heavyEffectsEnabled ? "group-hover:scale-110 transition-transform duration-500" : ""
                 ].join(" ")}
               >
                 {iconSvg}
@@ -263,50 +284,17 @@ const Skills = () => {
             <div className="space-y-6">{children}</div>
 
             <div className="mt-8 flex items-center gap-3 text-xs sm:text-sm text-slate-400">
-              <span className={`w-2 h-2 rounded-full bg-white/25 ${enableHeavyMotion ? "animate-pulse-slow" : ""}`} />
+              <span className={`w-2 h-2 rounded-full bg-white/25 ${heavyEffectsEnabled ? "animate-pulse-slow" : ""}`} />
               <span>Focused on smooth UI and reliable backend APIs</span>
             </div>
           </div>
         </div>
       );
     },
-    [enableHeavyMotion]
+    [heavyEffectsEnabled]
   );
 
-  const testimonials = useMemo(
-    () => [
-        {
-        name: "Mustafa Ali",
-        role: "Software Engineer @ Switchboard | Full Stack Developer | Delivering Scalable Tech That Drives Growth",
-        quote:
-          "I had the opportunity to manage Muhammad Ali directly, and he consistently impressed me with his frontend expertise. He takes Figma designs and converts them into clean, reusable React and Next.js components with accuracy and attention to detail. His understanding of UI structure, responsiveness, and modern frontend practices made him one of the most reliable developers on the team. Muhammad Ali would be a strong addition to any engineering team seeking a skilled and dependable frontend developer.",
-        avatar: "https://media.licdn.com/dms/image/v2/D4D03AQHAGEou5jsHZQ/profile-displayphoto-crop_800_800/B4DZkWKoA8IcAI-/0/1757013509676?e=1767830400&v=beta&t=3wsqWK8OuJBN-UXwPj5QQ2W5FIBEz1rHI98SH-X9zZw" 
-    },
-     ],
-    []
-  );
-
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [expanded, setExpanded] = useState(false);
-
-  const current = testimonials[activeTestimonial];
-
-  const nextTestimonial = useCallback(() => {
-    setExpanded(false);
-    setActiveTestimonial((i) => (i + 1) % testimonials.length);
-  }, [testimonials.length]);
-
-  const prevTestimonial = useCallback(() => {
-    setExpanded(false);
-    setActiveTestimonial((i) => (i - 1 + testimonials.length) % testimonials.length);
-  }, [testimonials.length]);
-
-  const displayedQuote = useMemo(() => {
-    const q = current?.quote || "";
-    if (expanded) return q;
-    if (q.length <= 260) return q;
-    return q.slice(0, 260).trimEnd() + "…";
-  }, [current?.quote, expanded]);
+  const showSnow = !reduceMotion && isSectionInView && !isScrolling;
 
   return (
     <section
@@ -314,39 +302,43 @@ const Skills = () => {
       className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="skills"
     >
-             <div className="absolute inset-0 z-[6] pointer-events-none">
-  <Snowfall
-    color="#82C3D9"
-    snowflakeCount={reduceMotion ? 0 : 120}
-    style={{ width: "100%", height: "100%" }}
-  />
-</div>
       <div className="absolute inset-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
+      {showSnow && (
+        <div className="absolute inset-0 z-[6] pointer-events-none">
+          <Snowfall color="#82C3D9" snowflakeCount={80} style={{ width: "100%", height: "100%" }} />
+        </div>
+      )}
+
       <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow" : ""}`} />
-        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-700" : ""}`} />
-        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${enableHeavyMotion ? "animate-aurora-slow delay-300" : ""}`} />
+        <div className={`absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow" : ""}`} />
+        <div className={`absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-700" : ""}`} />
+        <div className={`absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-3xl ${heavyEffectsEnabled ? "animate-aurora-slow delay-300" : ""}`} />
       </div>
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {orbs.map((o) => (
-          <div
-            key={o.id}
-            className={`absolute rounded-full opacity-10 ${enableHeavyMotion ? "animate-float-smooth" : ""}`}
-            style={{
-              width: `${o.size}px`,
-              height: `${o.size}px`,
-              left: `${o.left}%`,
-              top: `${o.top}%`,
-              background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
-              animationDelay: `${o.delay}s`,
-              animationDuration: `${o.duration}s`,
-              filter: `blur(${o.blur}px)`
-            }}
-          />
-        ))}
-      </div>
+      {heavyEffectsEnabled && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+          {orbs.map((o) => (
+            <div
+              key={o.id}
+              className="absolute rounded-full animate-float-smooth"
+              style={{
+                width: `${o.size}px`,
+                height: `${o.size}px`,
+                left: `${o.left}%`,
+                top: `${o.top}%`,
+                opacity: o.opacity,
+                background: `radial-gradient(circle, ${o.color}, transparent 70%)`,
+                animationDelay: `${o.delay}s`,
+                animationDuration: `${o.duration}s`,
+                filter: `blur(${o.blur}px)`,
+                willChange: "transform, opacity",
+                transform: "translateZ(0)"
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <div
         className="absolute inset-0 opacity-[0.06]"
@@ -372,7 +364,7 @@ const Skills = () => {
               <span
                 className={[
                   "text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500",
-                  enableHeavyMotion ? "animate-gradient" : ""
+                  heavyEffectsEnabled ? "animate-gradient" : ""
                 ].join(" ")}
                 style={{ backgroundSize: "200% auto" }}
               >
@@ -383,7 +375,7 @@ const Skills = () => {
             <div
               className={[
                 "absolute -bottom-2 left-1/2 -translate-x-1/2 w-44 sm:w-56 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent rounded-full",
-                enableHeavyMotion ? "animate-pulse-slow" : ""
+                heavyEffectsEnabled ? "animate-pulse-slow" : ""
               ].join(" ")}
             />
           </div>
@@ -456,14 +448,14 @@ const Skills = () => {
               className={[
                 "relative bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-7 sm:p-8 text-center",
                 "transition-all duration-300 shadow-2xl shadow-black/25 group overflow-hidden",
-                enableHeavyMotion ? "transform hover:scale-[1.03] hover:-translate-y-1 hover:shadow-cyan-400/10" : "",
+                heavyEffectsEnabled ? "transform hover:scale-[1.03] hover:-translate-y-1 hover:shadow-cyan-400/10" : "",
                 "hover:border-cyan-400/30"
               ].join(" ")}
             >
               <div
                 className={[
                   `absolute inset-0 bg-gradient-to-br ${stat.gradient} transition-opacity duration-500`,
-                  enableHeavyMotion ? "opacity-0 group-hover:opacity-10" : "opacity-0"
+                  heavyEffectsEnabled ? "opacity-0 group-hover:opacity-10" : "opacity-0"
                 ].join(" ")}
               />
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -473,15 +465,13 @@ const Skills = () => {
                   className={[
                     "w-14 h-14 mx-auto rounded-2xl mb-4 flex items-center justify-center",
                     "bg-slate-900/35 border border-slate-700/45",
-                    enableHeavyMotion ? "transform group-hover:scale-110 transition-transform duration-500" : ""
+                    heavyEffectsEnabled ? "transform group-hover:scale-110 transition-transform duration-500" : ""
                   ].join(" ")}
                 >
                   <stat.Icon className="w-7 h-7 text-slate-100" />
                 </div>
 
-                <h4
-                  className={`text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${stat.gradient} mb-2 sm:mb-3`}
-                >
+                <h4 className={`text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${stat.gradient} mb-2 sm:mb-3`}>
                   {stat.value}
                 </h4>
 
@@ -491,254 +481,61 @@ const Skills = () => {
               <div
                 className={[
                   "absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-cyan-400/10 to-transparent rounded-bl-full transition-opacity duration-500",
-                  enableHeavyMotion ? "opacity-0 group-hover:opacity-100" : "opacity-0"
+                  heavyEffectsEnabled ? "opacity-0 group-hover:opacity-100" : "opacity-0"
                 ].join(" ")}
               />
             </div>
           ))}
-        </div>
-
-        {/* Testimonials (replaces the CTA block) */}
-        <div
-          className={[
-            "mt-14 sm:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10",
-            "transition-all duration-1000 delay-900 transform overflow-hidden",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
-          ].join(" ")}
-        >
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-            <div className="min-w-0">
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h3>
-              <p className="text-slate-200/70 text-sm sm:text-base mt-2 max-w-2xl">
-                Feedback from people I have worked with, focused on delivery, ownership, and quality.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={prevTestimonial}
-                className={[
-                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
-                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
-                  enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
-                ].join(" ")}
-                aria-label="Previous testimonial"
-              >
-                <FiChevronLeft className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={nextTestimonial}
-                className={[
-                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
-                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
-                  enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
-                ].join(" ")}
-                aria-label="Next testimonial"
-              >
-                <FiChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="relative rounded-3xl overflow-hidden border border-slate-700/55">
-            {/* purple tinted card background, like your screenshot, but keeping your theme */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-purple-500/20 to-slate-900/10" />
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_55%)]" />
-
-            <div className="relative p-7 sm:p-10">
-              <div className="flex items-start gap-4 sm:gap-5">
-                {/* Avatar */}
-                <div className="shrink-0">
-                  {current?.avatar ? (
-                    <img
-                      src={current.avatar}
-                      alt={current.name}
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-white/20"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-extrabold">
-                      {getInitials(current?.name)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-white font-extrabold text-lg sm:text-xl truncate">{current?.name}</div>
-                      <div className="text-white/75 text-xs sm:text-sm mt-1">{current?.role}</div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {testimonials.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setExpanded(false);
-                            setActiveTestimonial(i);
-                          }}
-                          className={[
-                            "w-2.5 h-2.5 rounded-full transition-all duration-200",
-                            i === activeTestimonial ? "bg-white/90" : "bg-white/35 hover:bg-white/55"
-                          ].join(" ")}
-                          aria-label={`Go to testimonial ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">
-                    {displayedQuote}
-                  </p>
-
-                  {current?.quote?.length > 260 && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((v) => !v)}
-                      className="mt-4 text-white/80 hover:text-white text-sm font-semibold underline underline-offset-4"
-                    >
-                      {expanded ? "See less" : "See more"}
-                    </button>
-                  )}
-
-                  <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-                    <div className="text-white/65 text-xs sm:text-sm">
-                      {activeTestimonial + 1} of {testimonials.length}
-                    </div>
-
-                    <a
-                      href="#contact"
-                      className={[
-                        "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
-                        "bg-cyan-400 text-black border border-cyan-300/30",
-                        enableHeavyMotion ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
-                      ].join(" ")}
-                    >
-                      <span style={{ color: "black" }}>Get In Touch</span>
-                      <FiArrowRight className={`w-5 h-5 ${enableHeavyMotion ? "group-hover:translate-x-1 transition-transform duration-300" : ""}`} />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* small helper note to keep spacing similar to your old CTA */}
-          <div className="mt-6 text-xs sm:text-sm text-slate-200/55 text-center">
-            You can add more testimonials by updating the testimonials array.
-          </div>
         </div>
       </div>
 
       <style jsx>{`
         @keyframes float-smooth {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          25% {
-            transform: translate3d(-12px, -12px, 0);
-          }
-          50% {
-            transform: translate3d(12px, -8px, 0);
-          }
-          75% {
-            transform: translate3d(-8px, 12px, 0);
-          }
+          100% { transform: translate3d(0, 0, 0); }
+          25% { transform: translate3d(-12px, -12px, 0); }
+          50% { transform: translate3d(12px, -8px, 0); }
+          75% { transform: translate3d(-8px, 12px, 0); }
         }
 
         @keyframes aurora-slow {
           0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-            opacity: 0.65;
-          }
-          50% {
-            transform: translate3d(18px, -14px, 0) scale(1.03);
-            opacity: 0.9;
-          }
+          100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+          50% { transform: translate3d(18px, -14px, 0) scale(1.03); opacity: 0.9; }
         }
 
         @keyframes gradient {
           0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
+          100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
 
         @keyframes pulse-slow {
           0%,
-          100% {
-            opacity: 0.55;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.9;
-            transform: scale(1.06);
-          }
+          100% { opacity: 0.55; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.06); }
         }
 
         @keyframes pulse-fast {
           0%,
-          100% {
-            opacity: 0.8;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.3);
-          }
+          100% { opacity: 0.8; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
         }
 
         @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
 
-        .animate-float-smooth {
-          animation: float-smooth ease-in-out infinite;
-          will-change: transform;
-        }
+        .animate-float-smooth { animation: float-smooth ease-in-out infinite; will-change: transform; }
+        .animate-aurora-slow { animation: aurora-slow ease-in-out infinite; animation-duration: 18s; will-change: transform, opacity; }
+        .animate-gradient { animation: gradient 4s ease infinite; }
+        .animate-pulse-slow { animation: pulse-slow 4.5s ease-in-out infinite; }
+        .animate-pulse-fast { animation: pulse-fast 1.5s ease-in-out infinite; }
+        .animate-shimmer { animation: shimmer 2.6s infinite; }
 
-        .animate-aurora-slow {
-          animation: aurora-slow ease-in-out infinite;
-          animation-duration: 18s;
-          will-change: transform, opacity;
-        }
-
-        .animate-gradient {
-          animation: gradient 4s ease infinite;
-        }
-
-        .animate-pulse-slow {
-          animation: pulse-slow 4.5s ease-in-out infinite;
-        }
-
-        .animate-pulse-fast {
-          animation: pulse-fast 1.5s ease-in-out infinite;
-        }
-
-        .animate-shimmer {
-          animation: shimmer 2.6s infinite;
-        }
-
-        .delay-300 {
-          animation-delay: 300ms;
-        }
-        .delay-700 {
-          animation-delay: 700ms;
-        }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-700 { animation-delay: 700ms; }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-float-smooth,
@@ -746,9 +543,7 @@ const Skills = () => {
           .animate-gradient,
           .animate-pulse-slow,
           .animate-pulse-fast,
-          .animate-shimmer {
-            animation: none !important;
-          }
+          .animate-shimmer { animation: none !important; }
         }
       `}</style>
     </section>
