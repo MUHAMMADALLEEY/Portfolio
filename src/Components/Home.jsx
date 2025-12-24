@@ -4,7 +4,7 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useStat
 import { FaGithub, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { FiArrowRight, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
-// Lazy load for performance (works in React CRA/Vite too)
+// Lazy load for performance
 const Snowfall = lazy(() => import("react-snowfall"));
 
 const makeRng = (seed0) => {
@@ -42,7 +42,7 @@ const SocialCircle = React.memo(({ href, borderHover, bgHover, iconHover, Icon, 
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
       className={[
-        "group w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-800/40 sm:backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
+        "group w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-slate-800/40 sm:backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
         "transition-all duration-300 hover:scale-110 hover:-translate-y-1 relative overflow-hidden",
         borderHover,
         bgHover
@@ -55,52 +55,48 @@ const SocialCircle = React.memo(({ href, borderHover, bgHover, iconHover, Icon, 
 
       <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
 
-      <Icon className={`w-7 h-7 sm:w-8 sm:h-8 text-slate-400 transition-colors ${iconHover}`} />
+      <Icon className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-slate-400 transition-colors ${iconHover}`} />
 
       <style jsx>{`
         @keyframes ringPulse {
-          0% { transform: scale(1); opacity: 0.18; }
-          100% { transform: scale(1.38); opacity: 0; }
+          0% {
+            transform: scale(1);
+            opacity: 0.18;
+          }
+          100% {
+            transform: scale(1.38);
+            opacity: 0;
+          }
         }
         @keyframes orbit {
-          0% { transform: rotate(0deg); opacity: 0.2; }
-          100% { transform: rotate(360deg); opacity: 0.2; }
+          0% {
+            transform: rotate(0deg);
+            opacity: 0.2;
+          }
+          100% {
+            transform: rotate(360deg);
+            opacity: 0.2;
+          }
         }
-        .animate-ringPulse { animation: ringPulse 0.95s ease-out infinite; }
-        .animate-orbit { animation: orbit 2.8s linear infinite; }
+        .animate-ringPulse {
+          animation: ringPulse 0.95s ease-out infinite;
+        }
+        .animate-orbit {
+          animation: orbit 2.8s linear infinite;
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-ringPulse,
-          .animate-orbit { animation: none !important; }
+          .animate-orbit {
+            animation: none !important;
+          }
         }
       `}</style>
     </a>
   );
 });
 
-const Home = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  const sectionRef = useRef(null);
-  const [inView, setInView] = useState(true);
-
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimerRef = useRef(0);
-
-  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
-
-  const auroraRef = useRef(null);
-  const gridRef = useRef(null);
-  const imageRef = useRef(null);
-
-  const targetRef = useRef({ x: 0, y: 0 });
-  const smoothRef = useRef({ x: 0, y: 0 });
-  const lastMoveRef = useRef(Date.now());
-  const rafRef = useRef(0);
-
-  // Testimonials (moved from Skills)
+const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
   const testimonials = useMemo(
     () => [
       {
@@ -136,6 +132,181 @@ const Home = () => {
     if (q.length <= 260) return q;
     return q.slice(0, 260).trimEnd() + "…";
   }, [current?.quote, expanded]);
+
+  return (
+    <div className="mt-12 sm:mt-16 lg:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 sm:p-8 lg:p-10 overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+        <div className="min-w-0">
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h3>
+          <p className="text-slate-200/70 text-sm sm:text-base mt-2 max-w-2xl">
+            Feedback from people I have worked with, focused on delivery, ownership, and quality.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={prevTestimonial}
+            className={[
+              "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
+              "border-slate-700/60 bg-slate-900/35 text-slate-200",
+              heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+            ].join(" ")}
+            aria-label="Previous testimonial"
+          >
+            <FiChevronLeft className="w-5 h-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={nextTestimonial}
+            className={[
+              "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
+              "border-slate-700/60 bg-slate-900/35 text-slate-200",
+              heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+            ].join(" ")}
+            aria-label="Next testimonial"
+          >
+            <FiChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="relative rounded-3xl overflow-hidden border border-slate-700/55">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-purple-500/20 to-slate-900/10" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_55%)]" />
+
+        <div className="relative p-5 sm:p-7 lg:p-10">
+          <div className="flex items-start gap-4 sm:gap-5">
+            <div className="shrink-0">
+              {current?.avatar ? (
+                <img
+                  src={current.avatar}
+                  alt={current.name}
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-white/20"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-extrabold">
+                  {getInitials(current?.name)}
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-white font-extrabold text-lg sm:text-xl truncate">{current?.name}</div>
+                  <div className="text-white/75 text-xs sm:text-sm mt-1">{current?.role}</div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setExpanded(false);
+                        setActiveTestimonial(i);
+                      }}
+                      className={[
+                        "w-2.5 h-2.5 rounded-full transition-all duration-200",
+                        i === activeTestimonial ? "bg-white/90" : "bg-white/35 hover:bg-white/55"
+                      ].join(" ")}
+                      aria-label={`Go to testimonial ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">{displayedQuote}</p>
+
+              {current?.quote?.length > 260 && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-4 text-white/80 hover:text-white text-sm font-semibold underline underline-offset-4"
+                >
+                  {expanded ? "See less" : "See more"}
+                </button>
+              )}
+
+              <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                <div className="text-white/65 text-xs sm:text-sm">
+                  {activeTestimonial + 1} of {testimonials.length}
+                </div>
+
+                <a
+                  href="#contact"
+                  className={[
+                    "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
+                    "bg-cyan-400 text-black border border-cyan-300/30",
+                    heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
+                  ].join(" ")}
+                >
+                  <span style={{ color: "black" }}>Get In Touch</span>
+                  <FiArrowRight className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 text-xs sm:text-sm text-slate-200/55 text-center">
+        You can add more testimonials by updating the testimonials array.
+      </div>
+    </div>
+  );
+});
+
+const Home = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  const sectionRef = useRef(null);
+  const [inView, setInView] = useState(true);
+
+  const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
+  const auroraRef = useRef(null);
+  const gridRef = useRef(null);
+  const imageRef = useRef(null);
+
+  const targetRef = useRef({ x: 0, y: 0 });
+  const smoothRef = useRef({ x: 0, y: 0 });
+  const lastMoveRef = useRef(Date.now());
+  const rafRef = useRef(0);
+
+  // Scroll optimization: NO React state changes during scroll
+  const scrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const onScroll = () => {
+      if (!scrollingRef.current) {
+        scrollingRef.current = true;
+        root.dataset.scrolling = "1";
+      }
+
+      window.clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        scrollingRef.current = false;
+        delete root.dataset.scrolling;
+      }, 180);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(scrollTimeoutRef.current);
+      delete root.dataset.scrolling;
+    };
+  }, []);
 
   useEffect(() => {
     const mqMobile = window.matchMedia("(max-width: 1023px)");
@@ -179,22 +350,8 @@ const Home = () => {
     return () => io.disconnect();
   }, []);
 
-  useEffect(() => {
-    const onScroll = () => {
-      setIsScrolling(true);
-      window.clearTimeout(scrollTimerRef.current);
-      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(scrollTimerRef.current);
-    };
-  }, []);
-
-  const heavyEffectsEnabled = inView && !reducedMotion && !isScrolling;
-  const parallaxEnabled = !isMobile && !isCoarsePointer && !reducedMotion && inView && !isScrolling;
+  const heavyEffectsEnabled = inView && !reducedMotion;
+  const parallaxEnabled = !isMobile && !isCoarsePointer && !reducedMotion && inView;
 
   // Parallax mouse tracking (RAF throttled)
   useEffect(() => {
@@ -276,11 +433,11 @@ const Home = () => {
     };
   }, [parallaxEnabled]);
 
-  // Reduce counts on mobile + when not heavy enabled
-  const orbCount = heavyEffectsEnabled ? (isMobile ? 5 : 8) : 0;
-  const sparkleCount = heavyEffectsEnabled ? (isMobile ? 10 : 22) : 0;
-  const shootingStarCount = heavyEffectsEnabled ? (isMobile ? 2 : 3) : 0;
-  const emojiCount = heavyEffectsEnabled ? (isMobile ? 0 : 10) : 0;
+  // Keep DOM stable, pause on scroll via CSS instead of unmounting
+  const orbCount = heavyEffectsEnabled ? (isMobile ? 4 : 7) : 0;
+  const sparkleCount = heavyEffectsEnabled ? (isMobile ? 8 : 18) : 0;
+  const shootingStarCount = heavyEffectsEnabled ? (isMobile ? 1 : 2) : 0;
+  const emojiCount = heavyEffectsEnabled ? 0 : 0; // disabled for smoother scroll
 
   const orbs = useMemo(() => {
     if (!orbCount) return [];
@@ -288,14 +445,14 @@ const Home = () => {
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * (isMobile ? 220 : 360) + (isMobile ? 140 : 180),
+      size: rng() * (isMobile ? 180 : 280) + (isMobile ? 120 : 160),
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
       delay: i * 0.55,
-      duration: rng() * (isMobile ? 14 : 16) + (isMobile ? 18 : 22),
-      blur: rng() * (isMobile ? 10 : 14) + (isMobile ? 18 : 28),
-      opacity: rng() * (isMobile ? 0.05 : 0.06) + (isMobile ? 0.045 : 0.05)
+      duration: rng() * (isMobile ? 12 : 14) + (isMobile ? 18 : 20),
+      blur: rng() * (isMobile ? 8 : 10) + (isMobile ? 14 : 20),
+      opacity: rng() * (isMobile ? 0.05 : 0.055) + 0.04
     }));
   }, [orbCount, isMobile]);
 
@@ -304,12 +461,12 @@ const Home = () => {
     const rng = makeRng(seedRef.current + 202);
     return [...Array(sparkleCount)].map((_, i) => ({
       id: i,
-      size: rng() * (isMobile ? 2.0 : 2.4) + 1.0,
+      size: rng() * (isMobile ? 1.8 : 2.1) + 1.0,
       left: rng() * 100,
       top: rng() * 100,
-      opacity: rng() * (isMobile ? 0.18 : 0.24) + 0.08,
+      opacity: rng() * (isMobile ? 0.16 : 0.2) + 0.07,
       delay: rng() * 5,
-      duration: rng() * (isMobile ? 9 : 10) + 10
+      duration: rng() * (isMobile ? 8 : 9) + 10
     }));
   }, [sparkleCount, isMobile]);
 
@@ -320,40 +477,28 @@ const Home = () => {
       id: i,
       top: rng() * 65,
       delay: rng() * 6 + i * 1.2,
-      duration: rng() * 1.4 + 1.3,
-      length: rng() * (isMobile ? 150 : 190) + (isMobile ? 130 : 160),
-      opacity: rng() * (isMobile ? 0.18 : 0.22) + 0.18
+      duration: rng() * 1.2 + 1.3,
+      length: rng() * (isMobile ? 130 : 170) + (isMobile ? 120 : 150),
+      opacity: rng() * (isMobile ? 0.16 : 0.2) + 0.18
     }));
   }, [shootingStarCount, isMobile]);
 
   const emojis = useMemo(() => {
     if (!emojiCount) return [];
-    const rng = makeRng(seedRef.current + 404);
-    const list = ["⚡", "✨", "🚀", "💻", "🔥", "🧠", "⭐", "🎯", "🛠️", "🎨", "📦", "🌙", "💡"];
-    return [...Array(emojiCount)].map((_, i) => ({
-      id: i,
-      emoji: list[i % list.length],
-      left: rng() * 100,
-      top: rng() * 100,
-      size: rng() * 18 + 14,
-      rotate: rng() * 70 - 35,
-      delay: rng() * 5,
-      duration: rng() * 16 + 16,
-      opacity: rng() * 0.12 + 0.05
-    }));
+    return [];
   }, [emojiCount]);
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-screen flex items-start justify-center px-6 sm:px-8 lg:px-20 overflow-hidden pt-24 sm:pt-28 lg:pt-[140px] pb-16 sm:pb-20 lg:pb-[90px]"
+      className="relative w-full min-h-screen flex items-start justify-center px-4 sm:px-6 lg:px-20 overflow-hidden pt-20 sm:pt-24 lg:pt-[140px] pb-14 sm:pb-16 lg:pb-[90px]"
       id="home"
     >
-      {/* Snowfall lazy loaded */}
-      {inView && !isScrolling && !reducedMotion && (
-        <div className="absolute inset-0 z-[6] pointer-events-none">
+      {/* Snowfall, hidden on scroll for smoothness */}
+      {inView && !reducedMotion && (
+        <div className="absolute inset-0 z-[6] pointer-events-none hide-on-scroll">
           <Suspense fallback={null}>
-            <Snowfall color="#82C3D9" snowflakeCount={isMobile ? 45 : 80} />
+            <Snowfall color="#82C3D9" snowflakeCount={isMobile ? 22 : 40} />
           </Suspense>
         </div>
       )}
@@ -361,19 +506,19 @@ const Home = () => {
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
       <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.55]" style={{ contain: "paint" }}>
-        <div className="absolute -top-52 -left-52 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-blobA" />
-        <div className="absolute top-16 -right-56 w-[980px] h-[980px] rounded-full bg-sky-500/10 blur-2xl animate-blobB" />
-        <div className="absolute -bottom-56 left-1/3 w-[980px] h-[980px] rounded-full bg-blue-500/10 blur-2xl animate-blobC" />
+        <div className="absolute -top-52 -left-52 w-[800px] h-[800px] sm:w-[900px] sm:h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-blobA" />
+        <div className="absolute top-16 -right-56 w-[860px] h-[860px] sm:w-[980px] sm:h-[980px] rounded-full bg-sky-500/10 blur-2xl animate-blobB" />
+        <div className="absolute -bottom-56 left-1/3 w-[860px] h-[860px] sm:w-[980px] sm:h-[980px] rounded-full bg-blue-500/10 blur-2xl animate-blobC" />
       </div>
 
-      <div ref={auroraRef} className="absolute inset-0 z-[2] pointer-events-none will-change-transform" style={{ contain: "paint" }}>
-        <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-aurora-slow" />
-        <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-2xl animate-aurora-slow delay-700" />
-        <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-2xl animate-aurora-slow delay-300" />
+      <div ref={auroraRef} className="absolute inset-0 z-[2] pointer-events-none will-change-transform pause-on-scroll" style={{ contain: "paint" }}>
+        <div className="absolute -top-40 -left-40 w-[820px] h-[820px] sm:w-[900px] sm:h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-aurora-slow" />
+        <div className="absolute top-10 -right-40 w-[780px] h-[780px] sm:w-[860px] sm:h-[860px] rounded-full bg-sky-500/10 blur-2xl animate-aurora-slow delay-700" />
+        <div className="absolute -bottom-40 left-1/3 w-[820px] h-[820px] sm:w-[900px] sm:h-[900px] rounded-full bg-blue-500/10 blur-2xl animate-aurora-slow delay-300" />
       </div>
 
       {!!orbs.length && (
-        <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+        <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
           {orbs.map((o) => (
             <div
               key={o.id}
@@ -397,7 +542,7 @@ const Home = () => {
       )}
 
       {!!sparkles.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
           {sparkles.map((s) => (
             <div
               key={s.id}
@@ -420,7 +565,7 @@ const Home = () => {
       )}
 
       {!!shootingStars.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
           {shootingStars.map((st) => (
             <div
               key={st.id}
@@ -445,7 +590,7 @@ const Home = () => {
       )}
 
       {!!emojis.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
+        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
           {emojis.map((e) => (
             <div
               key={e.id}
@@ -471,7 +616,7 @@ const Home = () => {
 
       <div
         ref={gridRef}
-        className="absolute inset-0 z-[2] opacity-[0.055] will-change-transform"
+        className="absolute inset-0 z-[2] opacity-[0.055] will-change-transform pause-on-scroll"
         style={{
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
@@ -481,7 +626,7 @@ const Home = () => {
       />
 
       {!isMobile && heavyEffectsEnabled && (
-        <div className="absolute inset-0 z-[4] pointer-events-none opacity-[0.09] mix-blend-overlay animate-scan" style={{ contain: "paint" }}>
+        <div className="absolute inset-0 z-[4] pointer-events-none opacity-[0.09] mix-blend-overlay animate-scan pause-on-scroll" style={{ contain: "paint" }}>
           <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
         </div>
       )}
@@ -493,13 +638,13 @@ const Home = () => {
           {/* Image side */}
           <div className="lg:col-span-5 flex justify-center order-1 lg:order-2 animate-slideInRight">
             <div className="relative group">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-2xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 blur-2xl opacity-35 group-hover:opacity-55 transition-opacity duration-500 animate-pulse-slow pause-on-scroll" />
 
-              <div className="absolute -inset-10 animate-spin-slow opacity-25">
+              <div className="absolute -inset-10 animate-spin-slow opacity-25 pause-on-scroll">
                 <div className="h-full w-full rounded-full border-2 border-cyan-500/35 border-t-cyan-400 border-r-sky-400" />
               </div>
 
-              <div className="absolute -inset-5 animate-spin-reverse opacity-15">
+              <div className="absolute -inset-5 animate-spin-reverse opacity-15 pause-on-scroll">
                 <div className="h-full w-full rounded-full border border-blue-500/35 border-b-blue-400" />
               </div>
 
@@ -507,8 +652,8 @@ const Home = () => {
                 ref={imageRef}
                 className="relative rounded-full overflow-hidden border-4 border-cyan-400/20 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 sm:backdrop-blur-sm shadow-2xl shadow-cyan-400/15 will-change-transform"
                 style={{
-                  width: isMobile ? "320px" : "460px",
-                  height: isMobile ? "320px" : "460px",
+                  width: isMobile ? "280px" : "460px",
+                  height: isMobile ? "280px" : "460px",
                   transform: "translateZ(0)"
                 }}
               >
@@ -527,7 +672,7 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/40 sm:backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-sm sm:text-base animate-badgeFloat flex items-center gap-2">
+                <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 px-4 sm:px-5 py-2 rounded-full bg-black/40 sm:backdrop-blur-md border border-white/10 text-slate-100 font-semibold text-xs sm:text-base animate-badgeFloat flex items-center gap-2 pause-on-scroll">
                   <FiCheckCircle className="text-slate-100" />
                   Available for work ✨
                 </div>
@@ -536,9 +681,9 @@ const Home = () => {
           </div>
 
           {/* Text side */}
-          <div className="lg:col-span-7 space-y-8 order-2 lg:order-1 animate-slideInLeft">
-            <div className="space-y-6">
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.95] tracking-tight">
+          <div className="lg:col-span-7 space-y-7 sm:space-y-8 order-2 lg:order-1 animate-slideInLeft">
+            <div className="space-y-5 sm:space-y-6">
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.98] tracking-tight">
                 <span className="text-white block animate-fadeInUp">
                   Hi, I'm <span className="inline-block animate-waveHand">👋</span>
                 </span>
@@ -553,21 +698,21 @@ const Home = () => {
 
               <div className="relative w-full">
                 <h3
-                  className="text-3xl sm:text-4xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-fadeInUp animate-shimmerText"
+                  className="text-2xl sm:text-4xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-fadeInUp animate-shimmerText"
                   style={{ animationDelay: "0.4s", WebkitTextStroke: "0.5px rgba(34, 211, 238, 0.22)" }}
                 >
                   FullStack Developer
                 </h3>
 
-                <div className="mt-5 h-[3px] w-full max-w-xl rounded-full bg-slate-800/60 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-transparent animate-expandWidth-smooth" />
+                <div className="mt-4 sm:mt-5 h-[3px] w-full max-w-xl rounded-full bg-slate-800/60 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-transparent animate-expandWidth-smooth pause-on-scroll" />
                 </div>
 
-                <div className="mt-3 w-full max-w-xl h-[1px] opacity-60 bg-gradient-to-r from-transparent via-cyan-300/55 to-transparent animate-pulseLine" />
+                <div className="mt-3 w-full max-w-xl h-[1px] opacity-60 bg-gradient-to-r from-transparent via-cyan-300/55 to-transparent animate-pulseLine pause-on-scroll" />
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 animate-fadeInUp opacity-0" style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}>
+            <div className="flex flex-wrap gap-2 sm:gap-3 animate-fadeInUp opacity-0" style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}>
               <Chip text="React ⚛️" />
               <Chip text="Node.js 🟩" />
               <Chip text="MongoDB 🍃" />
@@ -575,9 +720,14 @@ const Home = () => {
               <Chip text="PostgreSQL 🐘" />
             </div>
 
-            <p className="text-slate-200 text-lg sm:text-xl lg:text-2xl leading-relaxed max-w-4xl animate-fadeInUp opacity-0" style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}>
-              A Full Stack Engineer with a passion for developing efficient, user centric web solutions. Throughout my career I have consistently demonstrated a strong ability to take initiative and lead diverse teams towards successful project outcomes.
-              I excel in collaborative environments but also enjoy independently diving deep into complex problems. My approach combines analytical thinking with creativity, which allows me to tackle issues from multiple angles.
+            <p
+              className="text-slate-200 text-base sm:text-xl lg:text-2xl leading-relaxed max-w-4xl animate-fadeInUp opacity-0"
+              style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}
+            >
+              A Full Stack Engineer with a passion for developing efficient, user centric web solutions. Throughout my career I have consistently
+              demonstrated a strong ability to take initiative and lead diverse teams towards successful project outcomes. I excel in collaborative
+              environments but also enjoy independently diving deep into complex problems. My approach combines analytical thinking with creativity, which
+              allows me to tackle issues from multiple angles.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl animate-fadeInUp opacity-0" style={{ animationDelay: "0.82s", animationFillMode: "forwards" }}>
@@ -595,15 +745,15 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-5 animate-fadeInUp opacity-0" style={{ animationDelay: "0.9s", animationFillMode: "forwards" }}>
-              <a href="./My Cv/aaaa.docx" className="relative px-10 py-5 text-lg sm:text-xl bg-cyan-400 rounded-xl font-extrabold overflow-hidden" style={{ color: "#000" }}>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 animate-fadeInUp opacity-0" style={{ animationDelay: "0.9s", animationFillMode: "forwards" }}>
+              <a href="./My Cv/aaaa.docx" className="relative px-7 sm:px-10 py-4 sm:py-5 text-base sm:text-xl bg-cyan-400 rounded-xl font-extrabold overflow-hidden" style={{ color: "#000" }}>
                 <span className="relative z-10 flex items-center gap-2 text-black">
                   Download CV <FiArrowRight />
                 </span>
                 <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
               </a>
 
-              <a href="#contact" className="relative px-10 py-5 text-lg sm:text-xl bg-transparent border-2 border-cyan-400/70 rounded-xl font-extrabold text-white overflow-hidden">
+              <a href="#contact" className="relative px-7 sm:px-10 py-4 sm:py-5 text-base sm:text-xl bg-transparent border-2 border-cyan-400/70 rounded-xl font-extrabold text-white overflow-hidden">
                 <span className="relative z-10 flex items-center gap-2">
                   Hire me <FiCheckCircle />
                 </span>
@@ -611,7 +761,7 @@ const Home = () => {
               </a>
             </div>
 
-            <div className="flex gap-4 animate-fadeInUp opacity-0" style={{ animationDelay: "1.05s", animationFillMode: "forwards" }}>
+            <div className="flex gap-3 sm:gap-4 animate-fadeInUp opacity-0" style={{ animationDelay: "1.05s", animationFillMode: "forwards" }}>
               <SocialCircle
                 href="https://github.com/MUHAMMADALLEEY"
                 borderHover="hover:border-cyan-400"
@@ -642,279 +792,345 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Testimonials */}
-        <div className="mt-14 sm:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-            <div className="min-w-0">
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h3>
-              <p className="text-slate-200/70 text-sm sm:text-base mt-2 max-w-2xl">
-                Feedback from people I have worked with, focused on delivery, ownership, and quality.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={prevTestimonial}
-                className={[
-                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
-                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
-                  heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
-                ].join(" ")}
-                aria-label="Previous testimonial"
-              >
-                <FiChevronLeft className="w-5 h-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={nextTestimonial}
-                className={[
-                  "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
-                  "border-slate-700/60 bg-slate-900/35 text-slate-200",
-                  heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
-                ].join(" ")}
-                aria-label="Next testimonial"
-              >
-                <FiChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="relative rounded-3xl overflow-hidden border border-slate-700/55">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-purple-500/20 to-slate-900/10" />
-            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_55%)]" />
-
-            <div className="relative p-7 sm:p-10">
-              <div className="flex items-start gap-4 sm:gap-5">
-                <div className="shrink-0">
-                  {current?.avatar ? (
-                    <img
-                      src={current.avatar}
-                      alt={current.name}
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border border-white/20"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 border border-white/20 flex items-center justify-center text-white font-extrabold">
-                      {getInitials(current?.name)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-white font-extrabold text-lg sm:text-xl truncate">{current?.name}</div>
-                      <div className="text-white/75 text-xs sm:text-sm mt-1">{current?.role}</div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {testimonials.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setExpanded(false);
-                            setActiveTestimonial(i);
-                          }}
-                          className={[
-                            "w-2.5 h-2.5 rounded-full transition-all duration-200",
-                            i === activeTestimonial ? "bg-white/90" : "bg-white/35 hover:bg-white/55"
-                          ].join(" ")}
-                          aria-label={`Go to testimonial ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">{displayedQuote}</p>
-
-                  {current?.quote?.length > 260 && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded((v) => !v)}
-                      className="mt-4 text-white/80 hover:text-white text-sm font-semibold underline underline-offset-4"
-                    >
-                      {expanded ? "See less" : "See more"}
-                    </button>
-                  )}
-
-                  <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
-                    <div className="text-white/65 text-xs sm:text-sm">
-                      {activeTestimonial + 1} of {testimonials.length}
-                    </div>
-
-                    <a
-                      href="#contact"
-                      className={[
-                        "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
-                        "bg-cyan-400 text-black border border-cyan-300/30",
-                        heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
-                      ].join(" ")}
-                    >
-                      <span style={{ color: "black" }}>Get In Touch</span>
-                      <FiArrowRight className="w-5 h-5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 text-xs sm:text-sm text-slate-200/55 text-center">
-            You can add more testimonials by updating the testimonials array.
-          </div>
-        </div>
+        <Testimonials heavyEffectsEnabled={heavyEffectsEnabled} />
       </div>
 
       <style jsx>{`
+        /* Pause heavy animations during scroll without React rerenders */
+        html[data-scrolling="1"] .pause-on-scroll {
+          animation-play-state: paused !important;
+          transition: opacity 120ms ease;
+          opacity: 0.25;
+        }
+        html[data-scrolling="1"] .hide-on-scroll {
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+
         @keyframes float-smooth {
           0%,
-          100% { transform: translate3d(0, 0, 0); }
-          25% { transform: translate3d(-14px, -12px, 0); }
-          50% { transform: translate3d(14px, -10px, 0); }
-          75% { transform: translate3d(-10px, 14px, 0); }
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+          25% {
+            transform: translate3d(-14px, -12px, 0);
+          }
+          50% {
+            transform: translate3d(14px, -10px, 0);
+          }
+          75% {
+            transform: translate3d(-10px, 14px, 0);
+          }
         }
         @keyframes aurora-slow {
           0%,
-          100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.6; }
-          50% { transform: translate3d(18px, -14px, 0) scale(1.035); opacity: 0.92; }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 0.6;
+          }
+          50% {
+            transform: translate3d(18px, -14px, 0) scale(1.035);
+            opacity: 0.92;
+          }
         }
         @keyframes blobA {
           0%,
-          100% { transform: translate3d(0, 0, 0) scale(1); }
-          33% { transform: translate3d(28px, -22px, 0) scale(1.05); }
-          66% { transform: translate3d(-22px, 26px, 0) scale(0.98); }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          33% {
+            transform: translate3d(28px, -22px, 0) scale(1.05);
+          }
+          66% {
+            transform: translate3d(-22px, 26px, 0) scale(0.98);
+          }
         }
         @keyframes blobB {
           0%,
-          100% { transform: translate3d(0, 0, 0) scale(1.02); }
-          33% { transform: translate3d(-26px, 18px, 0) scale(1.06); }
-          66% { transform: translate3d(18px, -26px, 0) scale(0.98); }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1.02);
+          }
+          33% {
+            transform: translate3d(-26px, 18px, 0) scale(1.06);
+          }
+          66% {
+            transform: translate3d(18px, -26px, 0) scale(0.98);
+          }
         }
         @keyframes blobC {
           0%,
-          100% { transform: translate3d(0, 0, 0) scale(1); }
-          33% { transform: translate3d(18px, 22px, 0) scale(1.05); }
-          66% { transform: translate3d(-26px, -18px, 0) scale(0.99); }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          33% {
+            transform: translate3d(18px, 22px, 0) scale(1.05);
+          }
+          66% {
+            transform: translate3d(-26px, -18px, 0) scale(0.99);
+          }
         }
         @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-70px); }
-          to { opacity: 1; transform: translateX(0); }
+          from {
+            opacity: 0;
+            transform: translateX(-70px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
         @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(70px); }
-          to { opacity: 1; transform: translateX(0); }
+          from {
+            opacity: 0;
+            transform: translateX(70px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(26px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(26px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         @keyframes expandWidthSmooth {
-          from { width: 0%; }
-          to { width: 100%; }
+          from {
+            width: 0%;
+          }
+          to {
+            width: 100%;
+          }
         }
         @keyframes gradient {
           0%,
-          100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
+          100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
         }
         @keyframes pulse-slow {
           0%,
-          100% { opacity: 0.32; }
-          50% { opacity: 0.58; }
+          100% {
+            opacity: 0.32;
+          }
+          50% {
+            opacity: 0.58;
+          }
         }
         @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
         @keyframes spin-reverse {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
+          from {
+            transform: rotate(360deg);
+          }
+          to {
+            transform: rotate(0deg);
+          }
         }
         @keyframes sparkle-drift {
-          0% { transform: translate3d(0, 0, 0); opacity: 0.05; }
-          20% { opacity: 0.28; }
-          50% { transform: translate3d(14px, -16px, 0); opacity: 0.16; }
-          100% { transform: translate3d(-10px, 12px, 0); opacity: 0.06; }
+          0% {
+            transform: translate3d(0, 0, 0);
+            opacity: 0.05;
+          }
+          20% {
+            opacity: 0.28;
+          }
+          50% {
+            transform: translate3d(14px, -16px, 0);
+            opacity: 0.16;
+          }
+          100% {
+            transform: translate3d(-10px, 12px, 0);
+            opacity: 0.06;
+          }
         }
         @keyframes softGlow {
           0%,
-          100% { filter: drop-shadow(0 0 0px rgba(34, 211, 238, 0)); }
-          50% { filter: drop-shadow(0 0 22px rgba(34, 211, 238, 0.18)); }
+          100% {
+            filter: drop-shadow(0 0 0px rgba(34, 211, 238, 0));
+          }
+          50% {
+            filter: drop-shadow(0 0 22px rgba(34, 211, 238, 0.18));
+          }
         }
         @keyframes shimmerText {
-          0% { background-position: 0% 50%; filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.05)); }
-          50% { background-position: 100% 50%; filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.1)); }
-          100% { background-position: 0% 50%; filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.05)); }
-        }
-        @keyframes emojiFloat {
-          0%,
-          100% { transform: translate3d(0, 0, 0) rotate(var(--r)); }
-          25% { transform: translate3d(14px, -10px, 0) rotate(calc(var(--r) + 10deg)); }
-          50% { transform: translate3d(-10px, -18px, 0) rotate(calc(var(--r) - 8deg)); }
-          75% { transform: translate3d(10px, 12px, 0) rotate(calc(var(--r) + 6deg)); }
+          0% {
+            background-position: 0% 50%;
+            filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.05));
+          }
+          50% {
+            background-position: 100% 50%;
+            filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.1));
+          }
+          100% {
+            background-position: 0% 50%;
+            filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.05));
+          }
         }
         @keyframes waveHand {
           0%,
-          100% { transform: rotate(0deg); }
-          15% { transform: rotate(14deg); }
-          30% { transform: rotate(-10deg); }
-          45% { transform: rotate(12deg); }
-          60% { transform: rotate(-8deg); }
+          100% {
+            transform: rotate(0deg);
+          }
+          15% {
+            transform: rotate(14deg);
+          }
+          30% {
+            transform: rotate(-10deg);
+          }
+          45% {
+            transform: rotate(12deg);
+          }
+          60% {
+            transform: rotate(-8deg);
+          }
         }
         @keyframes pulseLine {
           0%,
-          100% { opacity: 0.18; transform: scaleX(0.85); }
-          50% { opacity: 0.6; transform: scaleX(1); }
+          100% {
+            opacity: 0.18;
+            transform: scaleX(0.85);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scaleX(1);
+          }
         }
         @keyframes scan {
-          0% { transform: translateY(-35%); opacity: 0.05; }
-          50% { opacity: 0.12; }
-          100% { transform: translateY(35%); opacity: 0.05; }
+          0% {
+            transform: translateY(-35%);
+            opacity: 0.05;
+          }
+          50% {
+            opacity: 0.12;
+          }
+          100% {
+            transform: translateY(35%);
+            opacity: 0.05;
+          }
         }
         @keyframes shoot {
-          0% { transform: translate3d(0, 0, 0) rotate(-12deg); opacity: 0; }
-          10% { opacity: 1; }
-          100% { transform: translate3d(160vw, 55vh, 0) rotate(-12deg); opacity: 0; }
+          0% {
+            transform: translate3d(0, 0, 0) rotate(-12deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate3d(160vw, 55vh, 0) rotate(-12deg);
+            opacity: 0;
+          }
         }
         @keyframes badgeFloat {
           0%,
-          100% { transform: translate3d(-50%, 0, 0); opacity: 0.85; }
-          50% { transform: translate3d(-50%, -10px, 0); opacity: 1; }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+            opacity: 0.85;
+          }
+          50% {
+            transform: translate3d(-50%, -10px, 0);
+            opacity: 1;
+          }
         }
 
-        .animate-float-smooth { animation: float-smooth ease-in-out infinite; will-change: transform; }
-        .animate-aurora-slow { animation: aurora-slow ease-in-out infinite; animation-duration: 18s; will-change: transform, opacity; }
-        .animate-blobA { animation: blobA 16s ease-in-out infinite; will-change: transform; }
-        .animate-blobB { animation: blobB 18s ease-in-out infinite; will-change: transform; }
-        .animate-blobC { animation: blobC 20s ease-in-out infinite; will-change: transform; }
+        .animate-float-smooth {
+          animation: float-smooth ease-in-out infinite;
+          will-change: transform;
+        }
+        .animate-aurora-slow {
+          animation: aurora-slow ease-in-out infinite;
+          animation-duration: 18s;
+          will-change: transform, opacity;
+        }
+        .animate-blobA {
+          animation: blobA 16s ease-in-out infinite;
+          will-change: transform;
+        }
+        .animate-blobB {
+          animation: blobB 18s ease-in-out infinite;
+          will-change: transform;
+        }
+        .animate-blobC {
+          animation: blobC 20s ease-in-out infinite;
+          will-change: transform;
+        }
 
-        .animate-slideInLeft { animation: slideInLeft 0.85s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .animate-slideInRight { animation: slideInRight 0.85s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .animate-fadeInUp { animation: fadeInUp 0.9s ease-out; }
-        .animate-expandWidth-smooth { animation: expandWidthSmooth 1.05s ease-out; }
+        .animate-slideInLeft {
+          animation: slideInLeft 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .animate-slideInRight {
+          animation: slideInRight 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .animate-fadeInUp {
+          animation: fadeInUp 0.9s ease-out;
+        }
+        .animate-expandWidth-smooth {
+          animation: expandWidthSmooth 1.05s ease-out;
+        }
 
-        .animate-gradient { animation: gradient 5s ease infinite; }
-        .animate-pulse-slow { animation: pulse-slow 4.5s ease-in-out infinite; }
-        .animate-spin-slow { animation: spin-slow 22s linear infinite; }
-        .animate-spin-reverse { animation: spin-reverse 16s linear infinite; }
+        .animate-gradient {
+          animation: gradient 5s ease infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 4.5s ease-in-out infinite;
+        }
+        .animate-spin-slow {
+          animation: spin-slow 22s linear infinite;
+        }
+        .animate-spin-reverse {
+          animation: spin-reverse 16s linear infinite;
+        }
 
-        .animate-sparkle-drift { animation: sparkle-drift ease-in-out infinite; will-change: transform, opacity; }
-        .animate-softGlow { animation: softGlow 4.2s ease-in-out infinite; }
-        .animate-shimmerText { background-size: 240% 240%; animation: shimmerText 7s ease-in-out infinite; }
-        .animate-emojiFloat { animation: emojiFloat ease-in-out infinite; will-change: transform; }
-        .animate-waveHand { transform-origin: 70% 70%; animation: waveHand 1.7s ease-in-out infinite; }
+        .animate-sparkle-drift {
+          animation: sparkle-drift ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+        .animate-softGlow {
+          animation: softGlow 4.2s ease-in-out infinite;
+        }
+        .animate-shimmerText {
+          background-size: 240% 240%;
+          animation: shimmerText 7s ease-in-out infinite;
+        }
+        .animate-waveHand {
+          transform-origin: 70% 70%;
+          animation: waveHand 1.7s ease-in-out infinite;
+        }
 
-        .animate-pulseLine { animation: pulseLine 2.8s ease-in-out infinite; }
-        .animate-scan { animation: scan 9s ease-in-out infinite; }
-        .animate-shoot { animation: shoot linear infinite; }
-        .animate-badgeFloat { animation: badgeFloat 2.8s ease-in-out infinite; }
+        .animate-pulseLine {
+          animation: pulseLine 2.8s ease-in-out infinite;
+        }
+        .animate-scan {
+          animation: scan 9s ease-in-out infinite;
+        }
+        .animate-shoot {
+          animation: shoot linear infinite;
+        }
+        .animate-badgeFloat {
+          animation: badgeFloat 2.8s ease-in-out infinite;
+        }
 
-        .delay-300 { animation-delay: 300ms; }
-        .delay-700 { animation-delay: 700ms; }
+        .delay-300 {
+          animation-delay: 300ms;
+        }
+        .delay-700 {
+          animation-delay: 700ms;
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .animate-float-smooth,
@@ -927,7 +1143,6 @@ const Home = () => {
           .animate-sparkle-drift,
           .animate-softGlow,
           .animate-shimmerText,
-          .animate-emojiFloat,
           .animate-waveHand,
           .animate-pulseLine,
           .animate-scan,
