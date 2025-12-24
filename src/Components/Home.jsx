@@ -1,8 +1,9 @@
 "use client";
 
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FaGithub, FaInstagram, FaLinkedinIn } from "react-icons/fa";
-import { FiArrowRight, FiCheckCircle, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FaGithub, FaInstagram, FaLinkedinIn, FaNodeJs, FaReact } from "react-icons/fa";
+import { FiArrowRight, FiCheckCircle, FiChevronLeft, FiChevronRight, FiZap } from "react-icons/fi";
+import { SiMongodb, SiPostgresql } from "react-icons/si";
 
 // Lazy load for performance
 const Snowfall = lazy(() => import("react-snowfall"));
@@ -23,13 +24,15 @@ const getInitials = (name = "") => {
   return (first + last).toUpperCase();
 };
 
-const Chip = React.memo(({ text }) => {
+const Chip = React.memo(({ text, Icon }) => {
   return (
-    <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 font-semibold text-sm sm:text-base sm:backdrop-blur-md hover:bg-white/10 transition-all duration-300 hover:scale-[1.03]">
-      {text}
+    <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 font-semibold text-sm sm:text-base sm:backdrop-blur-md hover:bg-white/10 transition-all duration-300 hover:scale-[1.03] inline-flex items-center gap-2">
+      {Icon ? <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-200/80" /> : null}
+      <span>{text}</span>
     </span>
   );
 });
+
 
 const SocialCircle = React.memo(({ href, borderHover, bgHover, iconHover, Icon, label }) => {
   const isExternal = href?.startsWith("http");
@@ -713,11 +716,12 @@ const Home = () => {
             </div>
 
             <div className="flex flex-wrap gap-2 sm:gap-3 animate-fadeInUp opacity-0" style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}>
-              <Chip text="React ⚛️" />
-              <Chip text="Node.js 🟩" />
-              <Chip text="MongoDB 🍃" />
-              <Chip text="UI Animations ✨" />
-              <Chip text="PostgreSQL 🐘" />
+            <Chip text="React" Icon={FaReact} />
+<Chip text="Node.js" Icon={FaNodeJs} />
+<Chip text="MongoDB" Icon={SiMongodb} />
+<Chip text="UI Animations" Icon={FiZap} />
+<Chip text="PostgreSQL" Icon={SiPostgresql} />
+
             </div>
 
             <p
