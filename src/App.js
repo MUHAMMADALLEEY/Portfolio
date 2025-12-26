@@ -12,7 +12,7 @@ import About from "./Components/About";
 import Portfolio from "./Components/Portfolio";
 import Resume from "./Components/Resume";
 import Skills from "./Components/Skills";
-import Contact from "./Components/Contact";
+import Contact from "./Components/Certificate";
 import ProjectDetails from "./Components/ProjectDetails";
 
 const LayoutWithHeader = ({ children }) => (
@@ -77,7 +77,7 @@ function App() {
         />
 
         <Route
-          path="/contact"
+          path="/certificate"
           element={
             <LayoutWithHeader>
               <Contact />

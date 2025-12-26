@@ -241,7 +241,7 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
                 </div>
 
                 <a
-                  href="#contact"
+                  href="/"
                   className={[
                     "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
                     "bg-cyan-400 text-black border border-cyan-300/30",

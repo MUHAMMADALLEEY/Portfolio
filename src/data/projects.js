@@ -108,31 +108,5 @@ export const projects = [
     liveUrl: "https://mustafa-ali.vercel.app/",
     githubUrl: "https://github.com/MUHAMMADALLEEY/portfolio",
   },
-  {
-    slug: "ecommerce-store",
-    title: "E-commerce Store",
-    shortDescription:
-      "Full featured e commerce store with authentication and payment integration.",
-    longDescription:
-      "An end to end e commerce application featuring product listing, cart system, authentication, and payment integration. Built with scalability and user experience in mind.",
-    coverImage: "/images/ecommerce.PNG",
-    images: [],
-    tech: ["React", "Firebase", "Stripe", "Tailwind"],
-    liveUrl: "https://portfolio-nine-coral-16.vercel.app/",
-    githubUrl: "https://github.com/MUHAMMADALLEEY/ecommerce-store",
-  },
-
-  {
-    slug: "post-app",
-    title: "Post App",
-    shortDescription:
-      "Blog style post application using Express, MongoDB, and EJS templates.",
-    longDescription:
-      "A server rendered blog application with post creation, editing, and deletion features. Built using EJS templating and Express routes with MongoDB persistence.",
-    coverImage: "/images/auth.jpg",
-    images: [],
-    tech: ["Express", "Node.js", "MongoDB", "EJS"],
-    liveUrl: "https://portfolio-nine-coral-16.vercel.app/",
-    githubUrl: "https://github.com/MUHAMMADALLEEY/post-app",
-  },
+ 
 ];

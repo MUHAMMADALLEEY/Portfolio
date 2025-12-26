@@ -16,7 +16,7 @@ const Header = () => {
       { name: "Projects", to: "/portfolio" },
       { name: "Resume", to: "/resume" },
       { name: "Skills", to: "/skills" },
-      { name: "Contact", to: "/contact" }
+      { name: "Certification", to: "/certificate" }
     ],
     []
   );
@@ -127,7 +127,7 @@ const Header = () => {
               <div className="hidden lg:flex items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => handleNavClick("/contact")}
+                  onClick={() => handleNavClick("/")}
                   className="group relative inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-xl font-extrabold transition-all duration-300 hover:scale-[1.04] hover:shadow-xl hover:shadow-cyan-400/30 overflow-hidden"
                 >
                   <span className="backdrop-blur-xl border-b border-slate-800/50 shadow-2xl shadow-cyan-400/10 text-white text-2xl">
@@ -212,7 +212,7 @@ const Header = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleNavClick("/contact")}
+                  onClick={() => handleNavClick("/")}
                   className="flex w-full items-center justify-center gap-2 px-6 py-4 mt-4 rounded-2xl text-xl font-extrabold text-slate-900 bg-cyan-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-400/25"
                 >
                   Hire Me
