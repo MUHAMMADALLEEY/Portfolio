@@ -108,5 +108,22 @@ export const projects = [
     liveUrl: "https://mustafa-ali.vercel.app/",
     githubUrl: "https://github.com/MUHAMMADALLEEY/portfolio",
   },
- 
+ {
+    slug: "Mana Ads Manager",
+    title: "Mana Ads Manager",
+    shortDescription:"Mana is an AI powered advertising platform that helps businesses create, launch, and optimize high converting Meta ads in minutes. From audience targeting to offer creation and lead tracking, Mana simplifies the entire ad workflow in one dashboard.",
+    longDescription:"Mana is an end to end AI driven advertising platform built to simplify and accelerate digital marketing for businesses, coaches, and agencies. With Mana, you can create complete ad campaigns without the complexity of traditional ad managers. The platform guides you step by step through audience selection, offer generation, budgeting, ad copy creation, and campaign launch, all from a single intuitive dashboard. Mana uses AI powered audience insights and psychological profiling to help you target the right customers with the right message. It automatically generates high converting ad copy and creatives tailored to your audience and offer, while giving you full control to edit and approve everything before going live.The platform also includes real time campaign tracking, lead generation analytics, cost per lead insights, and seamless Meta Ads integration. Whether you are running fitness campaigns, local business promotions, or service based offers, Mana helps you launch faster, reduce ad waste, and focus on growth instead of setup.",
+    coverImage: "/images/ManaAds/2.PNG",
+    images: ["/images/ManaAds/1.PNG",
+      "/images/ManaAds/2.PNG",
+      "/images/ManaAds/3.PNG",
+      "/images/ManaAds/4.PNG",
+      "/images/ManaAds/5.PNG",
+      "/images/ManaAds/6.PNG",
+
+    ],
+    tech: ["Next", "Tailwind CSS", "Supabase"],
+    liveUrl: "#",
+    githubUrl: "https://github.com/MUHAMMADALLEEY/portfolio",
+  },
 ];
