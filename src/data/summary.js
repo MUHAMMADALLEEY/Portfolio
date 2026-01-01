@@ -1,9 +1,6 @@
-import { FiClock, FiCheckCircle } from "react-icons/fi";
-import { LuPuzzle } from "react-icons/lu";
+import { FiLayers, FiZap } from "react-icons/fi";
 
 export const summaryCards = [
-  { label: "Experience", value: "2+ Years", Icon: FiClock },
-  { label: "Projects", value: "Multiple", Icon: LuPuzzle },
-  { label: "Availability", value: "Open", Icon: FiCheckCircle },
-  { label: "Timezone", value: "PKT", Icon: FiClock }
+  { label: "Frontend Delivery", value: "Edge Cached", Icon: FiLayers },
+  { label: "Backend Latency", value: "<120ms", Icon: FiZap },
 ];

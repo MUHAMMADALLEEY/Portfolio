@@ -486,10 +486,6 @@ const Certification = () => {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-            <AwardIcon />
-            <span className="text-cyan-400 text-sm font-semibold">Professional Certifications</span>
-          </div>
 
           <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent">
             Skills & Credentials

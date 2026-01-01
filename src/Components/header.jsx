@@ -13,10 +13,11 @@ const Header = () => {
     () => [
       { name: "Home", to: "/" },
       { name: "About", to: "/about" },
-      { name: "Projects", to: "/portfolio" },
       { name: "Resume", to: "/resume" },
+      { name: "Projects", to: "/portfolio" },
+
       { name: "Skills", to: "/skills" },
-      { name: "Certification", to: "/certificate" }
+      { name: "Certification", to: "/certificate" },
     ],
     []
   );
@@ -71,7 +72,7 @@ const Header = () => {
             "transition-all duration-500",
             isScrolled
               ? "bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/50 shadow-2xl shadow-cyan-400/10"
-              : "bg-transparent"
+              : "bg-transparent",
           ].join(" ")}
         >
           <div className="max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-20">
@@ -84,7 +85,7 @@ const Header = () => {
                 aria-label="Go to Home"
               >
                 <div className="relative">
-                  <span className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-gradient inline-block">
+                  <span className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-800 animate-gradient inline-block">
                     M ALI
                   </span>
                   <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-300 to-sky-400 group-hover:w-full transition-all duration-300" />
@@ -110,7 +111,7 @@ const Header = () => {
                         "relative px-6 py-3.5 text-xl font-semibold rounded-xl transition-all duration-300",
                         isActive
                           ? "text-white"
-                          : "text-slate-300 hover:text-cyan-300"
+                          : "text-slate-300 hover:text-cyan-300",
                       ].join(" ")}
                       aria-current={isActive ? "page" : undefined}
                     >
@@ -128,24 +129,14 @@ const Header = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick("/")}
-                  className="group relative inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-xl font-extrabold transition-all duration-300 hover:scale-[1.04] hover:shadow-xl hover:shadow-cyan-400/30 overflow-hidden"
+                  className={[
+                    "px-6 py-4 rounded-2xl text-xl font-semibold transition-all duration-300",
+                    "bg-slate-900/30 border border-slate-800/40 text-slate-200",
+                    "hover:bg-slate-900/45 hover:border-cyan-400/30 hover:text-cyan-300",
+                    "shadow-lg hover:shadow-cyan-400/20",
+                  ].join(" ")}
                 >
-                  <span className="backdrop-blur-xl border-b border-slate-800/50 shadow-2xl shadow-cyan-400/10 text-white text-2xl">
-                    Hire Me
-                  </span>
-                  <svg
-                    className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  Hire Me
                 </button>
               </div>
 
@@ -183,7 +174,9 @@ const Header = () => {
         <div
           className={[
             "lg:hidden overflow-hidden transition-all duration-500",
-            isMobileMenuOpen ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"
+            isMobileMenuOpen
+              ? "max-h-[520px] opacity-100"
+              : "max-h-0 opacity-0",
           ].join(" ")}
         >
           <div className="bg-slate-950/96 backdrop-blur-xl border-b border-slate-800/60">
@@ -201,7 +194,7 @@ const Header = () => {
                         "block w-full text-left px-6 py-4 rounded-2xl text-xl font-semibold transition-all duration-300 animate-slideInRight",
                         isActive
                           ? "bg-cyan-400 text-slate-900 shadow-lg shadow-cyan-400/20"
-                          : "bg-slate-900/30 border border-slate-800/40 text-slate-200 hover:bg-slate-900/45 hover:border-cyan-400/30 hover:text-cyan-300"
+                          : "bg-slate-900/30 border border-slate-800/40 text-slate-200 hover:bg-slate-900/45 hover:border-cyan-400/30 hover:text-cyan-300",
                       ].join(" ")}
                       style={{ animationDelay: `${index * 45}ms` }}
                     >
@@ -213,7 +206,7 @@ const Header = () => {
                 <button
                   type="button"
                   onClick={() => handleNavClick("/")}
-                  className="flex w-full items-center justify-center gap-2 px-6 py-4 mt-4 rounded-2xl text-xl font-extrabold text-slate-900 bg-cyan-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-400/25"
+                  className="flex w-full items-center justify-center gap-2 px-6 py-4 mt-4 rounded-2xl text-xl font-extrabold text-cyan-400 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-400/25"
                 >
                   Hire Me
                 </button>

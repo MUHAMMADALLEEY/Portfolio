@@ -1,8 +1,28 @@
 "use client";
 
-import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FaGithub, FaInstagram, FaLinkedinIn, FaNodeJs, FaReact } from "react-icons/fa";
-import { FiArrowRight, FiCheckCircle, FiChevronLeft, FiChevronRight, FiZap } from "react-icons/fi";
+import React, {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  FaGithub,
+  FaInstagram,
+  FaLinkedinIn,
+  FaNodeJs,
+  FaReact,
+} from "react-icons/fa";
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiZap,
+} from "react-icons/fi";
 import { SiMongodb, SiPostgresql } from "react-icons/si";
 
 // Lazy load for performance
@@ -27,77 +47,82 @@ const getInitials = (name = "") => {
 const Chip = React.memo(({ text, Icon }) => {
   return (
     <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-200 font-semibold text-sm sm:text-base sm:backdrop-blur-md hover:bg-white/10 transition-all duration-300 hover:scale-[1.03] inline-flex items-center gap-2">
-      {Icon ? <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-200/80" /> : null}
+      {Icon ? (
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-200/80" />
+      ) : null}
       <span>{text}</span>
     </span>
   );
 });
 
+const SocialCircle = React.memo(
+  ({ href, borderHover, bgHover, iconHover, Icon, label }) => {
+    const isExternal = href?.startsWith("http");
 
-const SocialCircle = React.memo(({ href, borderHover, bgHover, iconHover, Icon, label }) => {
-  const isExternal = href?.startsWith("http");
+    return (
+      <a
+        href={href}
+        aria-label={label}
+        title={label}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        className={[
+          "group w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-slate-800/40 sm:backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
+          "transition-all duration-300 hover:scale-110 hover:-translate-y-1 relative overflow-hidden",
+          borderHover,
+          bgHover,
+        ].join(" ")}
+      >
+        <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="absolute inset-0 rounded-full ring-1 ring-white/10 animate-ringPulse" />
+          <span className="absolute -inset-6 rounded-full border border-white/10 animate-orbit" />
+        </span>
 
-  return (
-    <a
-      href={href}
-      aria-label={label}
-      title={label}
-      target={isExternal ? "_blank" : undefined}
-      rel={isExternal ? "noopener noreferrer" : undefined}
-      className={[
-        "group w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-slate-800/40 sm:backdrop-blur-sm border border-slate-700/70 flex items-center justify-center",
-        "transition-all duration-300 hover:scale-110 hover:-translate-y-1 relative overflow-hidden",
-        borderHover,
-        bgHover
-      ].join(" ")}
-    >
-      <span className="pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <span className="absolute inset-0 rounded-full ring-1 ring-white/10 animate-ringPulse" />
-        <span className="absolute -inset-6 rounded-full border border-white/10 animate-orbit" />
-      </span>
+        <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
 
-      <span className="pointer-events-none absolute -inset-y-8 -left-24 w-24 rotate-12 bg-white/10 blur-md opacity-0 group-hover:opacity-100 group-hover:translate-x-[220px] transition-all duration-700" />
+        <Icon
+          className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-slate-400 transition-colors ${iconHover}`}
+        />
 
-      <Icon className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-slate-400 transition-colors ${iconHover}`} />
-
-      <style jsx>{`
-        @keyframes ringPulse {
-          0% {
-            transform: scale(1);
-            opacity: 0.18;
+        <style jsx>{`
+          @keyframes ringPulse {
+            0% {
+              transform: scale(1);
+              opacity: 0.18;
+            }
+            100% {
+              transform: scale(1.38);
+              opacity: 0;
+            }
           }
-          100% {
-            transform: scale(1.38);
-            opacity: 0;
+          @keyframes orbit {
+            0% {
+              transform: rotate(0deg);
+              opacity: 0.2;
+            }
+            100% {
+              transform: rotate(360deg);
+              opacity: 0.2;
+            }
           }
-        }
-        @keyframes orbit {
-          0% {
-            transform: rotate(0deg);
-            opacity: 0.2;
+          .animate-ringPulse {
+            animation: ringPulse 0.95s ease-out infinite;
           }
-          100% {
-            transform: rotate(360deg);
-            opacity: 0.2;
-          }
-        }
-        .animate-ringPulse {
-          animation: ringPulse 0.95s ease-out infinite;
-        }
-        .animate-orbit {
-          animation: orbit 2.8s linear infinite;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .animate-ringPulse,
           .animate-orbit {
-            animation: none !important;
+            animation: orbit 2.8s linear infinite;
           }
-        }
-      `}</style>
-    </a>
-  );
-});
+
+          @media (prefers-reduced-motion: reduce) {
+            .animate-ringPulse,
+            .animate-orbit {
+              animation: none !important;
+            }
+          }
+        `}</style>
+      </a>
+    );
+  }
+);
 
 const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
   const testimonials = useMemo(
@@ -108,8 +133,8 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
         quote:
           "I had the opportunity to manage Muhammad Ali directly, and he consistently impressed me with his frontend expertise. He takes Figma designs and converts them into clean, reusable React and Next.js components with accuracy and attention to detail. His understanding of UI structure, responsiveness, and modern frontend practices made him one of the most reliable developers on the team. Muhammad Ali would be a strong addition to any engineering team seeking a skilled and dependable frontend developer.",
         avatar:
-          "https://media.licdn.com/dms/image/v2/D4D03AQHAGEou5jsHZQ/profile-displayphoto-crop_800_800/B4DZkWKoA8IcAI-/0/1757013509676?e=1767830400&v=beta&t=3wsqWK8OuJBN-UXwPj5QQ2W5FIBEz1rHI98SH-X9zZw"
-      }
+          "https://media.licdn.com/dms/image/v2/D4D03AQHAGEou5jsHZQ/profile-displayphoto-crop_800_800/B4DZkWKoA8IcAI-/0/1757013509676?e=1767830400&v=beta&t=3wsqWK8OuJBN-UXwPj5QQ2W5FIBEz1rHI98SH-X9zZw",
+      },
     ],
     []
   );
@@ -126,7 +151,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
 
   const prevTestimonial = useCallback(() => {
     setExpanded(false);
-    setActiveTestimonial((i) => (i - 1 + testimonials.length) % testimonials.length);
+    setActiveTestimonial(
+      (i) => (i - 1 + testimonials.length) % testimonials.length
+    );
   }, [testimonials.length]);
 
   const displayedQuote = useMemo(() => {
@@ -140,9 +167,12 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
     <div className="mt-12 sm:mt-16 lg:mt-20 bg-slate-900/45 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 sm:p-8 lg:p-10 overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
         <div className="min-w-0">
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Testimonials</h3>
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+            Testimonials
+          </h3>
           <p className="text-slate-200/70 text-sm sm:text-base mt-2 max-w-2xl">
-            Feedback from people I have worked with, focused on delivery, ownership, and quality.
+            Feedback from people I have worked with, focused on delivery,
+            ownership, and quality.
           </p>
         </div>
 
@@ -153,7 +183,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
             className={[
               "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
               "border-slate-700/60 bg-slate-900/35 text-slate-200",
-              heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+              heavyEffectsEnabled
+                ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35"
+                : "hover:border-cyan-400/35",
             ].join(" ")}
             aria-label="Previous testimonial"
           >
@@ -166,7 +198,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
             className={[
               "inline-flex items-center justify-center w-11 h-11 rounded-xl border",
               "border-slate-700/60 bg-slate-900/35 text-slate-200",
-              heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35" : "hover:border-cyan-400/35"
+              heavyEffectsEnabled
+                ? "hover:scale-105 transition-transform duration-200 hover:border-cyan-400/35"
+                : "hover:border-cyan-400/35",
             ].join(" ")}
             aria-label="Next testimonial"
           >
@@ -200,8 +234,12 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
             <div className="min-w-0 flex-1">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-white font-extrabold text-lg sm:text-xl truncate">{current?.name}</div>
-                  <div className="text-white/75 text-xs sm:text-sm mt-1">{current?.role}</div>
+                  <div className="text-white font-extrabold text-lg sm:text-xl truncate">
+                    {current?.name}
+                  </div>
+                  <div className="text-white/75 text-xs sm:text-sm mt-1">
+                    {current?.role}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -215,7 +253,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
                       }}
                       className={[
                         "w-2.5 h-2.5 rounded-full transition-all duration-200",
-                        i === activeTestimonial ? "bg-white/90" : "bg-white/35 hover:bg-white/55"
+                        i === activeTestimonial
+                          ? "bg-white/90"
+                          : "bg-white/35 hover:bg-white/55",
                       ].join(" ")}
                       aria-label={`Go to testimonial ${i + 1}`}
                     />
@@ -223,7 +263,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
                 </div>
               </div>
 
-              <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">{displayedQuote}</p>
+              <p className="text-white/90 text-sm sm:text-base leading-relaxed mt-5">
+                {displayedQuote}
+              </p>
 
               {current?.quote?.length > 260 && (
                 <button
@@ -245,7 +287,9 @@ const Testimonials = React.memo(function Testimonials({ heavyEffectsEnabled }) {
                   className={[
                     "inline-flex items-center justify-center gap-3 px-6 py-3 rounded-xl font-extrabold",
                     "bg-cyan-400 text-black border border-cyan-300/30",
-                    heavyEffectsEnabled ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20" : ""
+                    heavyEffectsEnabled
+                      ? "hover:scale-105 transition-transform duration-200 hover:shadow-2xl hover:shadow-cyan-400/20"
+                      : "",
                   ].join(" ")}
                 >
                   <span style={{ color: "black" }}>Get In Touch</span>
@@ -348,13 +392,17 @@ const Home = () => {
     const el = sectionRef.current;
     if (!el) return;
 
-    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.05 });
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.05 }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
   const heavyEffectsEnabled = inView && !reducedMotion;
-  const parallaxEnabled = !isMobile && !isCoarsePointer && !reducedMotion && inView;
+  const parallaxEnabled =
+    !isMobile && !isCoarsePointer && !reducedMotion && inView;
 
   // Parallax mouse tracking (RAF throttled)
   useEffect(() => {
@@ -408,8 +456,12 @@ const Home = () => {
       const grid = gridRef.current;
       const image = imageRef.current;
 
-      if (aurora) aurora.style.transform = `translate3d(${s.x * 1.2}px, ${s.y * 1.2}px, 0)`;
-      if (grid) grid.style.transform = `translate3d(${s.x * 0.6}px, ${s.y * 0.6}px, 0)`;
+      if (aurora)
+        aurora.style.transform = `translate3d(${s.x * 1.2}px, ${
+          s.y * 1.2
+        }px, 0)`;
+      if (grid)
+        grid.style.transform = `translate3d(${s.x * 0.6}px, ${s.y * 0.6}px, 0)`;
 
       if (image) {
         const idle = Date.now() - lastMoveRef.current > 900;
@@ -455,7 +507,7 @@ const Home = () => {
       delay: i * 0.55,
       duration: rng() * (isMobile ? 12 : 14) + (isMobile ? 18 : 20),
       blur: rng() * (isMobile ? 8 : 10) + (isMobile ? 14 : 20),
-      opacity: rng() * (isMobile ? 0.05 : 0.055) + 0.04
+      opacity: rng() * (isMobile ? 0.05 : 0.055) + 0.04,
     }));
   }, [orbCount, isMobile]);
 
@@ -469,7 +521,7 @@ const Home = () => {
       top: rng() * 100,
       opacity: rng() * (isMobile ? 0.16 : 0.2) + 0.07,
       delay: rng() * 5,
-      duration: rng() * (isMobile ? 8 : 9) + 10
+      duration: rng() * (isMobile ? 8 : 9) + 10,
     }));
   }, [sparkleCount, isMobile]);
 
@@ -482,7 +534,7 @@ const Home = () => {
       delay: rng() * 6 + i * 1.2,
       duration: rng() * 1.2 + 1.3,
       length: rng() * (isMobile ? 130 : 170) + (isMobile ? 120 : 150),
-      opacity: rng() * (isMobile ? 0.16 : 0.2) + 0.18
+      opacity: rng() * (isMobile ? 0.16 : 0.2) + 0.18,
     }));
   }, [shootingStarCount, isMobile]);
 
@@ -508,20 +560,30 @@ const Home = () => {
 
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      <div className="absolute inset-0 z-[1] pointer-events-none opacity-[0.55]" style={{ contain: "paint" }}>
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none opacity-[0.55]"
+        style={{ contain: "paint" }}
+      >
         <div className="absolute -top-52 -left-52 w-[800px] h-[800px] sm:w-[900px] sm:h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-blobA" />
         <div className="absolute top-16 -right-56 w-[860px] h-[860px] sm:w-[980px] sm:h-[980px] rounded-full bg-sky-500/10 blur-2xl animate-blobB" />
         <div className="absolute -bottom-56 left-1/3 w-[860px] h-[860px] sm:w-[980px] sm:h-[980px] rounded-full bg-blue-500/10 blur-2xl animate-blobC" />
       </div>
 
-      <div ref={auroraRef} className="absolute inset-0 z-[2] pointer-events-none will-change-transform pause-on-scroll" style={{ contain: "paint" }}>
+      <div
+        ref={auroraRef}
+        className="absolute inset-0 z-[2] pointer-events-none will-change-transform pause-on-scroll"
+        style={{ contain: "paint" }}
+      >
         <div className="absolute -top-40 -left-40 w-[820px] h-[820px] sm:w-[900px] sm:h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[780px] h-[780px] sm:w-[860px] sm:h-[860px] rounded-full bg-sky-500/10 blur-2xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[820px] h-[820px] sm:w-[900px] sm:h-[900px] rounded-full bg-blue-500/10 blur-2xl animate-aurora-slow delay-300" />
       </div>
 
       {!!orbs.length && (
-        <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
+        <div
+          className="absolute inset-0 z-[2] overflow-hidden pointer-events-none pause-on-scroll"
+          style={{ contain: "paint" }}
+        >
           {orbs.map((o) => (
             <div
               key={o.id}
@@ -537,7 +599,7 @@ const Home = () => {
                 animationDuration: `${o.duration}s`,
                 filter: `blur(${o.blur}px)`,
                 willChange: "transform, opacity",
-                transform: "translateZ(0)"
+                transform: "translateZ(0)",
               }}
             />
           ))}
@@ -545,7 +607,10 @@ const Home = () => {
       )}
 
       {!!sparkles.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
+        <div
+          className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll"
+          style={{ contain: "paint" }}
+        >
           {sparkles.map((s) => (
             <div
               key={s.id}
@@ -560,7 +625,7 @@ const Home = () => {
                 animationDuration: `${s.duration}s`,
                 filter: "blur(0.2px)",
                 willChange: "transform, opacity",
-                transform: "translateZ(0)"
+                transform: "translateZ(0)",
               }}
             />
           ))}
@@ -568,7 +633,10 @@ const Home = () => {
       )}
 
       {!!shootingStars.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
+        <div
+          className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll"
+          style={{ contain: "paint" }}
+        >
           {shootingStars.map((st) => (
             <div
               key={st.id}
@@ -585,7 +653,7 @@ const Home = () => {
                   "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(34,211,238,0.35) 70%, rgba(255,255,255,0) 100%)",
                 filter: "drop-shadow(0 0 10px rgba(34, 211, 238, 0.14))",
                 willChange: "transform, opacity",
-                transform: "translateZ(0)"
+                transform: "translateZ(0)",
               }}
             />
           ))}
@@ -593,7 +661,10 @@ const Home = () => {
       )}
 
       {!!emojis.length && (
-        <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll" style={{ contain: "paint" }}>
+        <div
+          className="absolute inset-0 z-[3] overflow-hidden pointer-events-none pause-on-scroll"
+          style={{ contain: "paint" }}
+        >
           {emojis.map((e) => (
             <div
               key={e.id}
@@ -604,11 +675,11 @@ const Home = () => {
                 fontSize: `${e.size}px`,
                 opacity: e.opacity,
                 filter: "drop-shadow(0 0 14px rgba(34, 211, 238, 0.12))",
-                ["--r"]: `${e.rotate}deg`,
+                "--r": `${e.rotate}deg`,
                 animationDelay: `${e.delay}s`,
                 animationDuration: `${e.duration}s`,
                 willChange: "transform, opacity",
-                transform: "translateZ(0)"
+                transform: "translateZ(0)",
               }}
             >
               {e.emoji}
@@ -624,12 +695,15 @@ const Home = () => {
           backgroundImage:
             "linear-gradient(rgba(34, 211, 238, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 211, 238, 0.18) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
-          contain: "paint"
+          contain: "paint",
         }}
       />
 
       {!isMobile && heavyEffectsEnabled && (
-        <div className="absolute inset-0 z-[4] pointer-events-none opacity-[0.09] mix-blend-overlay animate-scan pause-on-scroll" style={{ contain: "paint" }}>
+        <div
+          className="absolute inset-0 z-[4] pointer-events-none opacity-[0.09] mix-blend-overlay animate-scan pause-on-scroll"
+          style={{ contain: "paint" }}
+        >
           <div className="h-full w-full bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06)_1px,transparent_2px)] bg-[length:100%_6px]" />
         </div>
       )}
@@ -657,18 +731,19 @@ const Home = () => {
                 style={{
                   width: isMobile ? "280px" : "460px",
                   height: isMobile ? "280px" : "460px",
-                  transform: "translateZ(0)"
+                  transform: "translateZ(0)",
                 }}
               >
                 <img
-                  src="/images/file2.png"
+                  src="Me.png"
                   alt="Muhammad Ali"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ objectPosition: "center 30%" }}
                   loading="eager"
                   decoding="async"
                   onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
+                    e.currentTarget.src =
+                      "https://via.placeholder.com/460x460/0ea5e9/ffffff?text=MA";
                   }}
                 />
 
@@ -688,12 +763,16 @@ const Home = () => {
             <div className="space-y-5 sm:space-y-6">
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold leading-[0.98] tracking-tight">
                 <span className="text-white block animate-fadeInUp">
-                  Hi, I'm <span className="inline-block animate-waveHand">👋</span>
+                  Hi, I'm{" "}
+                  <span className="inline-block animate-waveHand">👋</span>
                 </span>
 
                 <span
                   className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 block animate-fadeInUp animate-gradient animate-softGlow"
-                  style={{ animationDelay: "0.2s", backgroundSize: "220% 220%" }}
+                  style={{
+                    animationDelay: "0.2s",
+                    backgroundSize: "220% 220%",
+                  }}
                 >
                   Muhammad Ali
                 </span>
@@ -702,7 +781,10 @@ const Home = () => {
               <div className="relative w-full">
                 <h3
                   className="text-2xl sm:text-4xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 animate-fadeInUp animate-shimmerText"
-                  style={{ animationDelay: "0.4s", WebkitTextStroke: "0.5px rgba(34, 211, 238, 0.22)" }}
+                  style={{
+                    animationDelay: "0.4s",
+                    WebkitTextStroke: "0.5px rgba(34, 211, 238, 0.22)",
+                  }}
                 >
                   FullStack Developer
                 </h3>
@@ -715,57 +797,86 @@ const Home = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:gap-3 animate-fadeInUp opacity-0" style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}>
-            <Chip text="React" Icon={FaReact} />
-<Chip text="Node.js" Icon={FaNodeJs} />
-<Chip text="MongoDB" Icon={SiMongodb} />
-<Chip text="UI Animations" Icon={FiZap} />
-<Chip text="PostgreSQL" Icon={SiPostgresql} />
-
+            <div
+              className="flex flex-wrap gap-2 sm:gap-3 animate-fadeInUp opacity-0"
+              style={{ animationDelay: "0.55s", animationFillMode: "forwards" }}
+            >
+              <Chip text="React" Icon={FaReact} />
+              <Chip text="Node.js" Icon={FaNodeJs} />
+              <Chip text="MongoDB" Icon={SiMongodb} />
+              <Chip text="UI Animations" Icon={FiZap} />
+              <Chip text="PostgreSQL" Icon={SiPostgresql} />
             </div>
 
             <p
               className="text-slate-200 text-base sm:text-xl lg:text-2xl leading-relaxed max-w-4xl animate-fadeInUp opacity-0"
               style={{ animationDelay: "0.7s", animationFillMode: "forwards" }}
             >
-              A Full Stack Engineer with a passion for developing efficient, user centric web solutions. Throughout my career I have consistently
-              demonstrated a strong ability to take initiative and lead diverse teams towards successful project outcomes. I excel in collaborative
-              environments but also enjoy independently diving deep into complex problems. My approach combines analytical thinking with creativity, which
-              allows me to tackle issues from multiple angles.
+              A Full Stack Engineer with a passion for developing efficient,
+              user centric web solutions. Throughout my career I have
+              consistently demonstrated a strong ability to take initiative and
+              lead diverse teams towards successful project outcomes. I excel in
+              collaborative environments but also enjoy independently diving
+              deep into complex problems. My approach combines analytical
+              thinking with creativity, which allows me to tackle issues from
+              multiple angles.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl animate-fadeInUp opacity-0" style={{ animationDelay: "0.82s", animationFillMode: "forwards" }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl animate-fadeInUp opacity-0"
+              style={{ animationDelay: "0.82s", animationFillMode: "forwards" }}
+            >
               <div className="rounded-xl border border-white/10 bg-white/5 sm:backdrop-blur-md px-4 py-3">
-                <p className="text-white font-extrabold text-lg">2+</p>
-                <p className="text-slate-300 text-sm">Years experience</p>
+                <p className="text-white font-extrabold text-lg">100%</p>
+                <p className="text-slate-300 text-sm">On time delivery</p>
               </div>
+
               <div className="rounded-xl border border-white/10 bg-white/5 sm:backdrop-blur-md px-4 py-3">
-                <p className="text-white font-extrabold text-lg">Multiple</p>
-                <p className="text-slate-300 text-sm">Projects delivered</p>
+                <p className="text-white font-extrabold text-lg">Strong</p>
+                <p className="text-slate-300 text-sm">Problem solving</p>
               </div>
+
               <div className="rounded-xl border border-white/10 bg-white/5 sm:backdrop-blur-md px-4 py-3">
-                <p className="text-white font-extrabold text-lg">Fast</p>
-                <p className="text-slate-300 text-sm">Clean UI and API</p>
+                <p className="text-white font-extrabold text-lg">Scalable</p>
+                <p className="text-slate-300 text-sm">Architecture and APIs</p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 animate-fadeInUp opacity-0" style={{ animationDelay: "0.9s", animationFillMode: "forwards" }}>
-              <a href="./My Cv/aaaa.docx" className="relative px-7 sm:px-10 py-4 sm:py-5 text-base sm:text-xl bg-cyan-400 rounded-xl font-extrabold overflow-hidden" style={{ color: "#000" }}>
+            <div
+              className="flex flex-col sm:flex-row gap-4 sm:gap-5 animate-fadeInUp opacity-0"
+              style={{ animationDelay: "0.9s", animationFillMode: "forwards" }}
+            >
+              <a
+                href="./My Cv/Ali-Full Stack Developer.pdf"
+                className="
+    group relative px-7 sm:px-10 py-4 sm:py-5
+    text-base sm:text-xl font-extrabold
+    bg-cyan-400 rounded-xl overflow-hidden
+    transition-all duration-300
+    hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-400/30
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300
+  "
+                style={{ color: "#000" }}
+              >
                 <span className="relative z-10 flex items-center gap-2 text-black">
-                  Download CV <FiArrowRight />
+                  Download CV
+                  <FiArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
-                <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
-              </a>
 
-              <a href="#contact" className="relative px-7 sm:px-10 py-4 sm:py-5 text-base sm:text-xl bg-transparent border-2 border-cyan-400/70 rounded-xl font-extrabold text-white overflow-hidden">
-                <span className="relative z-10 flex items-center gap-2">
-                  Hire me <FiCheckCircle />
+                {/* subtle shine */}
+                <span className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="absolute -inset-12 bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-12" />
                 </span>
+
+                {/* border */}
                 <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/10" />
               </a>
             </div>
 
-            <div className="flex gap-3 sm:gap-4 animate-fadeInUp opacity-0" style={{ animationDelay: "1.05s", animationFillMode: "forwards" }}>
+            <div
+              className="flex gap-3 sm:gap-4 animate-fadeInUp opacity-0"
+              style={{ animationDelay: "1.05s", animationFillMode: "forwards" }}
+            >
               <SocialCircle
                 href="https://github.com/MUHAMMADALLEEY"
                 borderHover="hover:border-cyan-400"

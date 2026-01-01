@@ -9,9 +9,11 @@ import {
   FiDatabase,
   FiShield,
   FiZap,
-  FiLayers,
   FiLink2,
   FiStar,
+  FiCode,
+  FiActivity,
+  FiTool,
 } from "react-icons/fi";
 
 const makeRng = (seed0) => {
@@ -26,19 +28,15 @@ const About = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
-  // In-view gating, stop heavy stuff when section is off screen
   const sectionRef = useRef(null);
   const [inView, setInView] = useState(true);
 
-  // Scroll gating, pause heavy visuals while scrolling
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimerRef = useRef(0);
 
   const seedRef = useRef(Math.floor(Math.random() * 1_000_000_000));
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  useEffect(() => setIsVisible(true), []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -70,9 +68,7 @@ const About = () => {
     const onScroll = () => {
       setIsScrolling(true);
       window.clearTimeout(scrollTimerRef.current);
-      scrollTimerRef.current = window.setTimeout(() => {
-        setIsScrolling(false);
-      }, 140);
+      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -84,19 +80,18 @@ const About = () => {
 
   const heavyEffectsEnabled = inView && !reduceMotion && !isScrolling;
 
-  // Reduce orb count + blur, biggest perf win
-  const orbCount = 7;
+  const orbCount = 6;
 
   const orbs = useMemo(() => {
     const rng = makeRng(seedRef.current + 123);
     const colors = ["#22d3ee", "#38bdf8", "#3b82f6", "#e2e8f0"];
     return [...Array(orbCount)].map((_, i) => ({
       id: i,
-      size: rng() * 300 + 160,
+      size: rng() * 300 + 180,
       left: rng() * 100,
       top: rng() * 100,
       color: colors[i % colors.length],
-      delay: i * 0.6,
+      delay: i * 0.55,
       duration: rng() * 14 + 18,
       blur: rng() * 10 + 18,
       opacity: rng() * 0.05 + 0.04,
@@ -104,57 +99,60 @@ const About = () => {
   }, []);
 
   const skillTags = useMemo(
-    () => ["React", "Node.js", "MongoDB", "Tailwind", "JavaScript", "Express", "PostgreSQL", "REST APIs"],
-    []
-  );
-
-  const highlights = useMemo(
     () => [
-      {
-        title: "Frontend that feels premium",
-        desc: "Clean layouts, smooth animations, pixel-perfect responsiveness, and great UX for real users.",
-        Icon: FiStar,
-      },
-      {
-        title: "Backend that scales",
-        desc: "Well-structured APIs, validation, auth, database design, and code that is easy to maintain.",
-        Icon: FiCpu,
-      },
-      {
-        title: "Fast delivery, clear communication",
-        desc: "Daily updates, organized tasks, and clean commits, so you always know what is happening.",
-        Icon: FiLayers,
-      },
-      {
-        title: "Performance and SEO mindset",
-        desc: "Optimized bundles, lazy loading, caching basics, and technical SEO friendly pages.",
-        Icon: FiZap,
-      },
+      "React",
+      "Next.js",
+      "Node.js",
+      "Express",
+      "PostgreSQL",
+      "MongoDB",
+      "REST APIs",
+      "Tailwind",
+      "Authentication(Bcrypt and JWS)",
     ],
     []
   );
 
-  const whatIDo = useMemo(
+  const stats = useMemo(
+    () => [
+      { value: "< 24 hours", label: "Response Time", Icon: FiActivity },
+      { value: "Strong", label: "Problem Solving", Icon: FiTool },
+      { value: "Scalable", label: "Architecture and APIs", Icon: FiCpu },
+    ],
+    []
+  );
+
+  const capabilityCards = useMemo(
     () => [
       {
-        Icon: FiLayers,
-        title: "Build UI",
-        text: "Landing pages, dashboards, admin panels, components, animations.",
+        Icon: FiStar,
+        title: "Premium UI Engineering",
+        text: "Pixel-perfect layouts, responsive components, and motion that supports UX.",
       },
       {
         Icon: FiShield,
-        title: "Auth and Security",
-        text: "JWT, role-based access, protected routes, best practices.",
+        title: "Secure Authentication",
+        text: "JWT sessions, role-based access, protected routes, and validation best practices.",
       },
       {
         Icon: FiDatabase,
-        title: "Database",
-        text: "MongoDB schemas, indexes, data modeling, migrations planning.",
+        title: "Data Modeling",
+        text: "Schemas, indexing, migrations planning, and scalable query patterns.",
       },
       {
         Icon: FiLink2,
-        title: "Integrations",
-        text: "Payments, email, third-party APIs, file uploads, webhooks.",
+        title: "Integrations and Automation",
+        text: "Payments, email, uploads, third-party APIs, and webhooks.",
+      },
+      {
+        Icon: FiZap,
+        title: "Performance and SEO",
+        text: "Bundle strategy, lazy loading, caching basics, and technical SEO hygiene.",
+      },
+      {
+        Icon: FiCode,
+        title: "Maintainable Codebase",
+        text: "Clear architecture, reusable modules, clean commits, and structured delivery.",
       },
     ],
     []
@@ -163,31 +161,23 @@ const About = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
       id="about"
+      className="relative w-full min-h-screen flex items-center justify-center px-6 sm:px-8 lg:px-20 py-20 overflow-hidden"
     >
-      {/* Snowfall, disable during scroll and when not in view */}
       {inView && !isScrolling && !reduceMotion && (
         <div className="absolute inset-0 z-[6] pointer-events-none">
-          <Snowfall
-            color="#82C3D9"
-            snowflakeCount={70}
-            style={{ width: "100%", height: "100%" }}
-          />
+          <Snowfall color="#82C3D9" snowflakeCount={70} style={{ width: "100%", height: "100%" }} />
         </div>
       )}
 
-      {/* Background */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#05060c] via-[#070b18] to-[#03050b]" />
 
-      {/* Aurora blobs, keep but reduce blur */}
       <div className="absolute inset-0 z-[1] pointer-events-none" style={{ contain: "paint" }}>
         <div className="absolute -top-40 -left-40 w-[900px] h-[900px] rounded-full bg-cyan-500/10 blur-2xl animate-aurora-slow" />
         <div className="absolute top-10 -right-40 w-[860px] h-[860px] rounded-full bg-sky-500/10 blur-2xl animate-aurora-slow delay-700" />
         <div className="absolute -bottom-40 left-1/3 w-[900px] h-[900px] rounded-full bg-blue-500/10 blur-2xl animate-aurora-slow delay-300" />
       </div>
 
-      {/* Orbs, only when enabled */}
       {heavyEffectsEnabled && (
         <div className="absolute inset-0 z-[2] overflow-hidden pointer-events-none" style={{ contain: "paint" }}>
           {orbs.map((o) => (
@@ -212,7 +202,6 @@ const About = () => {
         </div>
       )}
 
-      {/* Grid */}
       <div
         className="absolute inset-0 z-[2] opacity-[0.055]"
         style={{
@@ -225,14 +214,16 @@ const About = () => {
 
       <div className="absolute inset-0 z-[3] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_70%,rgba(0,0,0,0.85)_100%)]" />
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-[1300px]">
+      <div className="relative z-10 w-full max-w-[1200px]">
+        {/* Header */}
         <div
-          className={`text-center mb-12 sm:mb-16 transition-all duration-1000 transform ${
+          className={`text-center transition-all duration-1000 transform ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
           }`}
         >
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold inline-block tracking-tight text-white">
+         
+
+          <h2 className="mt-6 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white">
             About{" "}
             <span
               className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 ${
@@ -244,227 +235,157 @@ const About = () => {
             </span>
           </h2>
 
-          <div
-            className={`h-1 w-36 bg-gradient-to-r from-cyan-400 to-transparent mx-auto mt-6 rounded-full ${
-              reduceMotion ? "" : "animate-pulse-slow"
-            }`}
-          />
-
-          <p className="text-slate-200/90 text-lg sm:text-xl mt-6 max-w-3xl mx-auto leading-relaxed">
-            I build modern, fast, and beautiful web applications, with clean code and a strong focus on user
-            experience.
+          <p className="text-slate-200/90 text-lg sm:text-xl mt-5 max-w-3xl mx-auto leading-relaxed">
+            I build modern, fast web applications with clean architecture, reliable APIs, and a premium user experience.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        {/* Main layout */}
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* Left, story + stats + skills */}
           <div
-            className={`lg:col-span-7 transition-all duration-1000 delay-200 transform ${
+            className={`lg:col-span-5 transition-all duration-1000 delay-200 transform ${
               isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-20"
             }`}
           >
-            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-10 overflow-hidden shadow-2xl shadow-black/30">
+            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9 overflow-hidden shadow-2xl shadow-black/30">
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
               <div className="relative">
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="px-4 py-2 rounded-full bg-slate-800/40 border border-slate-700/50 text-slate-100 font-extrabold text-sm sm:text-base">
-                    Full Stack Developer
-                  </span>
-
-                  <span className="px-4 py-2 rounded-full bg-cyan-500/12 border border-cyan-400/25 text-cyan-100 font-extrabold text-sm sm:text-base">
-                    React + Node.js
-                  </span>
-                  <span className="px-4 py-2 rounded-full bg-sky-500/12 border border-sky-400/25 text-sky-100 font-extrabold text-sm sm:text-base">
-                    Clean UI and APIs
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 mt-5">
-                  <div
-                    className={`h-1 w-20 bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full ${
-                      reduceMotion ? "" : "animate-pulse-slow"
-                    }`}
-                  />
-                  <div
-                    className={`h-1 w-10 bg-gradient-to-r from-sky-400 to-blue-500 rounded-full ${
-                      reduceMotion ? "" : "animate-pulse-slow delay-300"
-                    }`}
-                  />
-                </div>
-
-                <p className="text-slate-100/90 text-lg sm:text-xl leading-relaxed mt-7 bg-slate-800/25 p-7 rounded-2xl border border-slate-700/40 hover:border-cyan-400/35 transition-all duration-300">
-                  I build end-to-end web applications, from a beautiful frontend to a reliable backend. I
-                  focus on responsiveness, performance, and clean architecture, so your product is easy to
-                  scale and easy to maintain. If you want someone who cares about details and delivers on
-                  time, I can help.
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white">What you get</h3>
+                <p className="text-slate-100/90 text-lg mt-4 leading-relaxed">
+                  End-to-end delivery, from UI to backend. I focus on responsiveness, performance, and maintainability,
+                  so your product stays easy to scale and easy to evolve.
                 </p>
 
-                <div className="flex flex-wrap gap-3 mt-7">
-                  {skillTags.map((skill, index) => (
-                    <span
-                      key={skill}
-                      className={`px-5 py-3 bg-slate-800/45 border border-cyan-500/25 rounded-full text-cyan-100 text-sm sm:text-base font-extrabold hover:bg-cyan-500/10 hover:border-cyan-400 transition-all duration-300 hover:scale-105 cursor-default ${
-                        reduceMotion ? "" : "animate-fadeInUp opacity-0"
-                      }`}
-                      style={
-                        reduceMotion
-                          ? undefined
-                          : {
-                              animationDelay: `${0.6 + index * 0.08}s`,
-                              animationFillMode: "forwards",
-                            }
-                      }
+                {/* Stats row */}
+                <div className="mt-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {stats.map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-2xl border border-white/10 bg-white/5 sm:backdrop-blur-md px-4 py-4"
                     >
-                      {skill}
-                    </span>
+                      <div className="flex items-center gap-2">
+                        <s.Icon className="w-5 h-5 text-cyan-200" />
+                        <p className="text-white font-extrabold text-base">{s.value}</p>
+                      </div>
+                      <p className="text-slate-300 text-sm mt-1">{s.label}</p>
+                    </div>
                   ))}
                 </div>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                {/* Skills */}
+                <div className="mt-7">
+                  <div className="text-slate-200/80 text-base font-semibold">Core Stack</div>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {skillTags.map((skill, index) => (
+                      <span
+                        key={skill}
+                        className={`px-4 py-2 bg-slate-800/45 border border-cyan-500/25 rounded-full text-cyan-100 text-sm sm:text-base font-extrabold hover:bg-cyan-500/10 hover:border-cyan-400 transition-all duration-300 hover:scale-[1.03] cursor-default ${
+                          reduceMotion ? "" : "animate-fadeInUp opacity-0"
+                        }`}
+                        style={
+                          reduceMotion
+                            ? undefined
+                            : { animationDelay: `${0.55 + index * 0.07}s`, animationFillMode: "forwards" }
+                        }
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Single CTA button only */}
+                <div className="mt-8">
                   <a
-                    href="#contact"
-                    className="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-cyan-400 text-black text-lg sm:text-xl font-extrabold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/35 relative overflow-hidden"
-                  >
-                    <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    <span className="relative text-black">Let's Work Together</span>
-                    <FiArrowRight className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" />
-                  </a>
-
-                  <a
-                    href="#resume"
-                    className="inline-flex items-center justify-center gap-3 px-10 py-5 bg-slate-900/40 border border-cyan-400/40 text-white text-lg sm:text-xl font-extrabold rounded-xl hover:border-cyan-300/70 hover:bg-slate-900/55 transition-all duration-300 transform hover:scale-105"
-                  >
-                    View Resume <FiCheckCircle className="w-6 h-6" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-8">
-              {highlights.map((h, idx) => (
-                <div
-                  key={h.title}
-                  className={`relative bg-slate-900/40 sm:backdrop-blur-xl border border-slate-700/50 rounded-2xl p-7 hover:border-cyan-400/35 transition-all duration-500 hover:shadow-xl hover:shadow-cyan-400/10 group overflow-hidden ${
-                    reduceMotion ? "" : "animate-fadeInUp opacity-0"
-                  }`}
-                  style={
-                    reduceMotion
-                      ? undefined
-                      : { animationDelay: `${0.35 + idx * 0.1}s`, animationFillMode: "forwards" }
-                  }
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/7 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <div className="relative flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
-                      <h.Icon className="w-7 h-7 text-cyan-200" />
-                    </div>
-                    <div>
-                      <h4 className="text-2xl font-extrabold text-white group-hover:text-cyan-200 transition-colors duration-300">
-                        {h.title}
-                      </h4>
-                      <p className="text-slate-200/90 text-lg mt-2 leading-relaxed">{h.desc}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className={`lg:col-span-5 transition-all duration-1000 delay-400 transform ${
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
-            }`}
-          >
-            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9 shadow-2xl shadow-black/30 overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-              <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
-                What I{" "}
-                <span
-                  className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 ${
-                    reduceMotion ? "" : "animate-gradient"
-                  }`}
-                  style={{ backgroundSize: "200% auto" }}
-                >
-                  Do
-                </span>
-              </h3>
-
-              <p className="text-slate-200/90 text-lg sm:text-xl mt-3 leading-relaxed">
-                Here is what you can expect when you hire me.
-              </p>
-
-              <div className="mt-7 space-y-4">
-                {whatIDo.map((item, idx) => (
-                  <div
-                    key={item.title}
-                    className={`flex items-start gap-4 bg-slate-800/30 border border-slate-700/40 rounded-2xl p-6 hover:border-cyan-400/35 hover:bg-slate-800/40 transition-all duration-300 ${
-                      reduceMotion ? "" : "animate-fadeInUp opacity-0"
-                    }`}
-                    style={
-                      reduceMotion
-                        ? undefined
-                        : { animationDelay: `${0.55 + idx * 0.08}s`, animationFillMode: "forwards" }
-                    }
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
-                      <item.Icon className="w-7 h-7 text-cyan-200" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-extrabold text-white">{item.title}</div>
-                      <div className="text-slate-200/90 text-lg mt-1 leading-relaxed">{item.text}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-7 bg-gradient-to-br from-cyan-500/10 to-sky-500/8 border border-cyan-400/20 rounded-2xl p-6">
-                <div className="text-white text-2xl font-extrabold">My promise</div>
-                <div className="text-slate-100/90 text-lg mt-2 leading-relaxed">
-                  You will get clean code, smooth UI, and clear communication, no confusion, no delays.
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 relative bg-gradient-to-br from-cyan-500/12 to-blue-500/10 sm:backdrop-blur-xl border border-cyan-400/25 rounded-3xl p-8 sm:p-9 overflow-hidden">
-              {!reduceMotion && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/8 to-transparent animate-shimmer" />
-              )}
-
-              <div className="relative">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h4 className="text-3xl font-extrabold text-white">Availability</h4>
-                    <p className="text-slate-100/90 text-lg mt-2">Full-time and freelance work</p>
-                  </div>
-                  <div className="px-5 py-2 rounded-full bg-slate-900/35 border border-slate-700/50 text-slate-100 font-extrabold text-lg flex items-center gap-2">
-                    Open <FiCheckCircle className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="bg-slate-900/35 border border-slate-700/45 rounded-2xl p-5">
-                    <div className="text-slate-200/80 text-base font-semibold">Response Time</div>
-                    <div className="text-white text-2xl font-extrabold mt-1">Fast</div>
-                  </div>
-                  <div className="bg-slate-900/35 border border-slate-700/45 rounded-2xl p-5">
-                    <div className="text-slate-200/80 text-base font-semibold">Timezone</div>
-                    <div className="text-white text-2xl font-extrabold mt-1">Asia/Karachi</div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <a
-                    href="#contact"
+                    href="./My Cv/Ali-Full Stack Developer.pdf"
                     className="group inline-flex items-center justify-center gap-3 w-full px-10 py-5 bg-cyan-400 text-black text-lg sm:text-xl font-extrabold rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-400/35 relative overflow-hidden"
                   >
                     <span className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     <span className="relative text-black">Get In Touch</span>
                     <FiArrowRight className="w-6 h-6 transform group-hover:translate-x-1 transition-transform duration-300" />
                   </a>
+
+                  <div className="mt-3 text-center text-slate-300/80 text-sm">
+                    Available for full-time and freelance work
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Right, capabilities grid */}
+          <div
+            className={`lg:col-span-7 transition-all duration-1000 delay-400 transform ${
+              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-20"
+            }`}
+          >
+            <div className="relative bg-slate-900/45 sm:backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 sm:p-9 shadow-2xl shadow-black/30 overflow-hidden">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <h3 className="text-3xl sm:text-4xl font-extrabold text-white">
+                    Engineering{" "}
+                    <span
+                      className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 ${
+                        reduceMotion ? "" : "animate-gradient"
+                      }`}
+                      style={{ backgroundSize: "200% auto" }}
+                    >
+                      Capabilities
+                    </span>
+                  </h3>
+                  <p className="text-slate-200/90 text-lg sm:text-xl mt-3 leading-relaxed">
+                    A clean build process, practical architecture, and consistent delivery.
+                  </p>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/35 border border-slate-700/50 text-slate-100 font-extrabold text-base">
+                  Open <FiCheckCircle className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {capabilityCards.map((c, idx) => (
+                  <div
+                    key={c.title}
+                    className={`relative bg-slate-800/28 border border-slate-700/45 rounded-2xl p-7 hover:border-cyan-400/35 hover:bg-slate-800/38 transition-all duration-400 overflow-hidden ${
+                      reduceMotion ? "" : "animate-fadeInUp opacity-0"
+                    }`}
+                    style={
+                      reduceMotion
+                        ? undefined
+                        : { animationDelay: `${0.25 + idx * 0.08}s`, animationFillMode: "forwards" }
+                    }
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/7 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                        <c.Icon className="w-7 h-7 text-cyan-200" />
+                      </div>
+                      <div>
+                        <h4 className="text-xl sm:text-2xl font-extrabold text-white">{c.title}</h4>
+                        <p className="text-slate-200/90 text-base sm:text-lg mt-2 leading-relaxed">{c.text}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-7 bg-gradient-to-br from-cyan-500/10 to-sky-500/8 border border-cyan-400/20 rounded-2xl p-6">
+                <div className="text-white text-2xl font-extrabold">Delivery Standard</div>
+                <div className="text-slate-100/90 text-lg mt-2 leading-relaxed">
+                  Clean code, clear updates, and production-ready results, no confusion, no delays.
+                </div>
+              </div>
+            </div>
+
+            {/* Compact footer note */}
+            <div className="mt-6 text-center text-slate-300/80 text-sm">
+              If you want a reliable developer for UI and backend delivery, use the button to start.
             </div>
           </div>
         </div>
@@ -520,16 +441,6 @@ const About = () => {
           }
         }
 
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            opacity: 0.35;
-          }
-          50% {
-            opacity: 0.55;
-          }
-        }
-
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);
@@ -558,15 +469,6 @@ const About = () => {
           animation: gradient 4s ease infinite;
         }
 
-        .animate-pulse-slow {
-          animation: pulse-slow 4.5s ease-in-out infinite;
-        }
-
-        .animate-shimmer {
-          animation: shimmer 2.5s linear infinite;
-          will-change: transform;
-        }
-
         .delay-300 {
           animation-delay: 300ms;
         }
@@ -578,9 +480,7 @@ const About = () => {
           .animate-float-smooth,
           .animate-aurora-slow,
           .animate-fadeInUp,
-          .animate-gradient,
-          .animate-pulse-slow,
-          .animate-shimmer {
+          .animate-gradient {
             animation: none !important;
           }
         }

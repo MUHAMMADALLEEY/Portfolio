@@ -395,48 +395,90 @@ const Resume = () => {
               ))}
             </div>
 
-            <div className="relative bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 rounded-3xl p-7 overflow-hidden shadow-2xl shadow-black/25">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+           <div className="relative bg-slate-900/45 backdrop-blur-xl perf-blur border border-slate-700/50 rounded-3xl overflow-hidden shadow-2xl shadow-black/25">
+  {/* top accent */}
+  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/35 to-transparent" />
 
-              <h3 className="text-2xl font-extrabold text-white mb-6">Quick Summary</h3>
+  {/* header */}
+  <div className="px-7 pt-7 pb-5 border-b border-white/5">
+    <div className="flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <h3 className="text-2xl font-extrabold text-white tracking-tight">System Snapshot</h3>
+        <p className="text-slate-400 text-sm mt-1">Production metrics, fast scan</p>
+      </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {summaryCards.map((c) => (
-                  <div
-                    key={c.label}
-                    className="bg-slate-800/30 border border-slate-700/40 rounded-2xl p-5 hover:border-cyan-400/30 transition-all duration-300"
-                  >
-                    <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
-                      <c.Icon className="w-6 h-6 text-cyan-200" />
-                    </div>
-                    <div className="text-slate-300 text-sm font-semibold mt-2">{c.label}</div>
-                    <div className="text-white text-2xl font-extrabold mt-1">{c.value}</div>
-                  </div>
-                ))}
+      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/35 border border-slate-700/45">
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/80 shadow-[0_0_10px_rgba(110,231,183,0.45)]" />
+        <span className="text-slate-200 font-bold text-sm">Healthy</span>
+      </span>
+    </div>
+  </div>
+
+  {/* metrics */}
+  <div className="p-7">
+    <div className="grid grid-cols-2 gap-4">
+      {summaryCards.map((c, idx) => (
+        <div
+          key={c.label}
+          className="
+            group relative overflow-hidden rounded-2xl p-5
+            border border-white/10 bg-slate-950/35
+            transition-all duration-300 ease-out
+            hover:-translate-y-1 hover:border-cyan-400/25
+            hover:shadow-[0_0_22px_rgba(34,211,238,0.14)]
+          "
+        >
+          {/* glow */}
+          <div
+            className="
+              pointer-events-none absolute -inset-1 opacity-0 blur-2xl
+              transition-opacity duration-300
+              group-hover:opacity-100
+              bg-[radial-gradient(circle_at_25%_20%,rgba(34,211,238,0.28),transparent_60%)]
+            "
+          />
+
+          <div className="relative flex items-start gap-4">
+            <div
+              className="
+                flex h-12 w-12 items-center justify-center rounded-2xl
+                bg-cyan-400/10 border border-cyan-400/20
+                transition-all duration-300
+                group-hover:border-cyan-400/35
+                group-hover:shadow-[0_0_16px_rgba(34,211,238,0.28)]
+              "
+            >
+              <c.Icon className="h-6 w-6 text-cyan-200" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="text-[8px] uppercase tracking-wider text-slate-400">
+                {c.label}
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <a
-                  href="#contact"
-                  className={`text-center px-4 py-3 rounded-xl bg-cyan-400 text-black font-extrabold text-lg ${
-                    heavyEffectsEnabled ? "hover:scale-[1.02] transition-transform duration-300" : ""
-                  }`}
-                >
-                  Contact
-                </a>
+              <div className="mt-1 flex items-baseline gap-2">
+                <div className="text-white text-xl font-extrabold leading-none">
+                  {c.value}
+                </div>
+              </div>
 
-                <a
-                  href="#portfolio"
-                  className={[
-                    "text-center px-4 py-3 rounded-xl bg-slate-900/40 border border-slate-700/60 text-slate-100 font-extrabold text-lg",
-                    heavyEffectsEnabled ? "hover:border-cyan-400/40 hover:scale-[1.02]" : "hover:border-cyan-400/40",
-                    "transition-all duration-300"
-                  ].join(" ")}
-                >
-                  Portfolio
-                </a>
+              {/* micro bar */}
+              <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-400/70 to-sky-400/50 transition-all duration-300 group-hover:w-full"
+                  style={{ width: `${62 + ((idx * 13) % 28)}%` }}
+                />
               </div>
             </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+   
+  </div>
+</div>
+
           </div>
 
           <div

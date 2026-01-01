@@ -50,19 +50,18 @@ function App() {
         />
 
         <Route
-          path="/portfolio"
-          element={
-            <LayoutWithHeader>
-              <Portfolio />
-            </LayoutWithHeader>
-          }
-        />
-
-        <Route
           path="/resume"
           element={
             <LayoutWithHeader>
               <Resume />
+            </LayoutWithHeader>
+          }
+        />
+        <Route
+          path="/portfolio"
+          element={
+            <LayoutWithHeader>
+              <Portfolio />
             </LayoutWithHeader>
           }
         />

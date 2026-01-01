@@ -8,9 +8,9 @@ import {
   FiDatabase,
   FiCloud,
   FiBox,
-  FiFolder,
-  FiSmile,
-  FiTarget
+  FiCheckCircle,
+  FiShield,
+  FiLayers
 } from "react-icons/fi";
 import Snowfall from "react-snowfall";
 
@@ -43,7 +43,7 @@ const Skills = () => {
     () => [
       { name: "React.js", level: 90, color: "from-orange-500 to-red-500", Icon: FiCode },
       { name: "Next.js", level: 90, color: "from-blue-500 to-cyan-500", Icon: FiPenTool },
-      { name: "Tailwind", level: 70, color: "from-cyan-400 to-blue-500", Icon: FiGrid },
+      { name: "Tailwind", level: 80, color: "from-cyan-400 to-blue-500", Icon: FiGrid },
       { name: "JavaScript", level: 80, color: "from-yellow-500 to-orange-500", Icon: FiZap }
     ],
     []
@@ -166,15 +166,37 @@ const Skills = () => {
     return () => observer.disconnect();
   }, []);
 
-  const Stats = useMemo(
-    () => [
-      { label: "Projects Completed", value: "Many", Icon: FiFolder, gradient: "from-purple-500 to-pink-500" },
-      { label: "Technologies", value: "12+", Icon: FiZap, gradient: "from-cyan-500 to-blue-500" },
-      { label: "Years Experience", value: "2 +", Icon: FiTarget, gradient: "from-green-500 to-emerald-500" },
-      { label: "Happy Clients", value: "10+", Icon: FiSmile, gradient: "from-orange-500 to-red-500" }
-    ],
-    []
-  );
+ const Stats = useMemo(
+  () => [
+    {
+      label: "System Reliability",
+      value: "High",
+      Icon: FiShield,
+      gradient: "from-emerald-500 to-teal-500"
+    },
+    {
+      label: "Performance Focus",
+      value: "Optimized",
+      Icon: FiZap,
+      gradient: "from-cyan-500 to-blue-500"
+    },
+    {
+      label: "Code Quality",
+      value: "Maintainable",
+      Icon: FiCheckCircle,
+      gradient: "from-indigo-500 to-violet-500"
+    },
+    {
+      label: "Architecture",
+      value: "Scalable",
+      Icon: FiLayers,
+      gradient: "from-purple-500 to-pink-500"
+    }
+  ],
+  []
+);
+
+
 
   const chips = useMemo(() => ["UI Focused", "Performance", "Scalable Code", "Clean Architecture"], []);
 
