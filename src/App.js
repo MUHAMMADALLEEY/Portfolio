@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import "./App.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -7,13 +7,15 @@ import "aos/dist/aos.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Header from "./Components/header";
-import Home from "./Components/Home";
-import About from "./Components/About";
-import Portfolio from "./Components/Portfolio";
-import Resume from "./Components/Resume";
-import Skills from "./Components/Skills";
-import Contact from "./Components/Certificate";
-import ProjectDetails from "./Components/ProjectDetails";
+
+// ✅ Lazy-loaded components
+const Home = lazy(() => import("./Components/Home"));
+const About = lazy(() => import("./Components/About"));
+const Portfolio = lazy(() => import("./Components/Portfolio"));
+const Resume = lazy(() => import("./Components/Resume"));
+const Skills = lazy(() => import("./Components/Skills"));
+const Contact = lazy(() => import("./Components/Certificate"));
+const ProjectDetails = lazy(() => import("./Components/ProjectDetails"));
 
 const LayoutWithHeader = ({ children }) => (
   <>
@@ -30,69 +32,72 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <LayoutWithHeader>
-              <Home />
-            </LayoutWithHeader>
-          }
-        />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LayoutWithHeader>
+                <Home />
+              </LayoutWithHeader>
+            }
+          />
 
-        <Route
-          path="/about"
-          element={
-            <LayoutWithHeader>
-              <About />
-            </LayoutWithHeader>
-          }
-        />
+          <Route
+            path="/about"
+            element={
+              <LayoutWithHeader>
+                <About />
+              </LayoutWithHeader>
+            }
+          />
 
-        <Route
-          path="/resume"
-          element={
-            <LayoutWithHeader>
-              <Resume />
-            </LayoutWithHeader>
-          }
-        />
-        <Route
-          path="/portfolio"
-          element={
-            <LayoutWithHeader>
-              <Portfolio />
-            </LayoutWithHeader>
-          }
-        />
+          <Route
+            path="/resume"
+            element={
+              <LayoutWithHeader>
+                <Resume />
+              </LayoutWithHeader>
+            }
+          />
 
-        <Route
-          path="/skills"
-          element={
-            <LayoutWithHeader>
-              <Skills />
-            </LayoutWithHeader>
-          }
-        />
+          <Route
+            path="/portfolio"
+            element={
+              <LayoutWithHeader>
+                <Portfolio />
+              </LayoutWithHeader>
+            }
+          />
 
-        <Route
-          path="/certificate"
-          element={
-            <LayoutWithHeader>
-              <Contact />
-            </LayoutWithHeader>
-          }
-        />
+          <Route
+            path="/skills"
+            element={
+              <LayoutWithHeader>
+                <Skills />
+              </LayoutWithHeader>
+            }
+          />
 
-        <Route
-          path="/projects/:slug"
-          element={
-            <LayoutWithHeader>
-              <ProjectDetails />
-            </LayoutWithHeader>
-          }
-        />
-      </Routes>
+          <Route
+            path="/certificate"
+            element={
+              <LayoutWithHeader>
+                <Contact />
+              </LayoutWithHeader>
+            }
+          />
+
+          <Route
+            path="/projects/:slug"
+            element={
+              <LayoutWithHeader>
+                <ProjectDetails />
+              </LayoutWithHeader>
+            }
+          />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
