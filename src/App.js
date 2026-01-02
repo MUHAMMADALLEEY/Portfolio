@@ -3,6 +3,7 @@ import React, { useEffect, lazy, Suspense } from "react";
 import "./App.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -31,8 +32,10 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <Suspense fallback={<div>Loading...</div>}>
+    <>
+      <SpeedInsights />
+      <BrowserRouter>
+        <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route
             path="/"
@@ -99,6 +102,7 @@ function App() {
         </Routes>
       </Suspense>
     </BrowserRouter>
+    </>
   );
 }
 
